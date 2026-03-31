@@ -12,9 +12,9 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.auth import create_access_token, get_current_user, verify_password
-from backend.database import get_db
-from backend.models import LoginRequest, TokenResponse
-from backend.models_db import Tenant
+from backend.db.session import get_db
+from backend.models.orm import Tenant
+from backend.schemas import LoginRequest, TokenResponse
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 

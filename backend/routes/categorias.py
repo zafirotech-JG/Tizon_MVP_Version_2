@@ -1,14 +1,15 @@
 """
-routes/categorias.py — CRUD de categorías por sucursal
+routes/categorias.py — CRUD completo de categorías por sucursal
+Solo admin puede editar/eliminar categorías.
 """
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from backend.database import get_db
-from backend.models import CategoriaCreate, CategoriaOut
-from backend.models_db import Categoria
+from backend.db.session import get_db
+from backend.models.orm import Categoria, Producto
+from backend.schemas import CategoriaCreate, CategoriaOut, CategoriaUpdate
 from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/categorias", tags=["Categorías"])
@@ -69,3 +70,61 @@ def crear_categoria(
     db.commit()
     db.refresh(categoria)
     return categoria
+
+
+@router.put("/{categoria_id}", response_model=CategoriaOut)
+def editar_categoria(
+    categoria_id: str,
+    data: CategoriaUpdate,
+    user: dict    = Depends(get_current_user),
+    db:   Session = Depends(get_db),
+):
+    """Edita el nombre de una categoría. Solo admins."""
+    if not user.get("es_admin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores pueden editar categorías")
+
+    cat = db.query(Categoria).filter(
+        Categoria.id        == categoria_id,
+        Categoria.tenant_id == user["tenant_id"],
+    ).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
+    cat.nombre = data.nombre
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+@router.delete("/{categoria_id}", status_code=204)
+def eliminar_categoria(
+    categoria_id: str,
+    user: dict    = Depends(get_current_user),
+    db:   Session = Depends(get_db),
+):
+    """Elimina (soft delete) una categoría. Solo admins."""
+    if not user.get("es_admin"):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo administradores pueden eliminar categorías")
+
+    cat = db.query(Categoria).filter(
+        Categoria.id        == categoria_id,
+        Categoria.tenant_id == user["tenant_id"],
+    ).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+
+    # Verificar si hay productos activos en esta categoría
+    productos_activos = db.query(Producto).filter(
+        Producto.tenant_id  == user["tenant_id"],
+        Producto.categoria  == cat.nombre,
+        Producto.activo     == True,
+    ).count()
+
+    if productos_activos > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"No se puede eliminar: hay {productos_activos} producto(s) activo(s) en esta categoría",
+        )
+
+    cat.activo = False
+    db.commit()

@@ -1,195 +1,171 @@
-# 🔥 Tizón POS
+# Tizón POS
 
-> Sistema de Punto de Venta multi-tenant para asaderos y restaurantes colombianos — construido con FastAPI + vanilla JS.
+Sistema de Punto de Venta multi-tenant para asaderos y restaurantes — **FastAPI** en el backend y **JavaScript** en el frontend (sin build).
 
----
+### Características principales
 
-## ¿Qué es Tizón?
-
-Tizón es un POS (Punto de Venta) SaaS diseñado específicamente para restaurantes de parrilla colombiana. Reemplaza el caos de las hojas de cálculo con un sistema web moderno, rápido y accesible desde cualquier dispositivo.
-
-Cada restaurante tiene su propio espacio aislado, puede manejar múltiples sucursales, y el dueño tiene visibilidad total de sus ventas en tiempo real.
-
----
-
-## ✨ Funcionalidades
-
-### Para el restaurante
-- 🛒 **POS con carrito multi-producto** — agrega, edita y elimina productos en segundos
-- 💳 **Métodos de pago** — Efectivo, Nequi, Daviplata, Tarjeta con cálculo de cambio automático
-- 🧾 **Recibo imprimible** — ticket estilo caja registradora con un clic
-- 🏪 **Multi-sucursal** — maneja varias sedes desde una sola cuenta
-- 📦 **Inventario** — productos y categorías con soft delete
-- 🛵 **Domicilios** — recargo automático por unidad, registrado en caja
-- 📊 **Cierre de caja** — reporte diario por sucursal con desglose por método de pago y gráfico de top productos
-
-### Para el operador (super admin)
-- 👑 **Panel de administración** en `/admin`
-- 👥 **Gestión de clientes** — ver todos los tenants registrados
-- 🔒 **Control de suscripciones** — activar, suspender, renovar (+30 días)
-- ⏰ **Bloqueo automático** — el sistema corta el acceso cuando vence la suscripción
+- POS con carrito, métodos de pago y recibo imprimible  
+- Multi-sucursal e inventario por sede  
+- Reportes y cierre de caja  
+- Panel super admin en `/admin` (gestión de tenants y suscripciones)  
 
 ---
 
-## 🏗️ Arquitectura
+## Estructura del proyecto
 
 ```
-tizon_migrado/
+Tizon_MVP_Version_2/
 ├── backend/
-│   ├── main.py          # App entry point, CORS, rutas, archivos estáticos
-│   ├── database.py      # SQLAlchemy — auto-detecta SQLite vs PostgreSQL
-│   ├── models_db.py     # ORM: Tenant, Sucursal, Producto, Categoria, Venta
-│   ├── models.py        # Pydantic schemas
-│   ├── auth.py          # JWT: creación, verificación, get_current_user
-│   └── routes/
-│       ├── auth.py      # Login, registro
-│       ├── admin.py     # Super admin — gestión de tenants
+│   ├── main.py              # App FastAPI: tablas al arranque, CORS, routers, estáticos
+│   ├── auth.py              # JWT, hash de contraseñas, dependencia get_current_user
+│   ├── core/
+│   │   └── config.py        # Variables de entorno y rutas (PROJECT_ROOT, FRONTEND_DIR, CORS)
+│   ├── db/
+│   │   └── session.py       # Engine SQLAlchemy, Base, SessionLocal, get_db
+│   ├── models/
+│   │   ├── orm.py           # Tablas: Tenant, Sucursal, Producto, Categoria, Venta
+│   │   └── __init__.py      # Reexporta modelos ORM
+│   ├── schemas/
+│   │   ├── api.py           # Schemas Pydantic (requests/responses)
+│   │   └── __init__.py
+│   └── routes/              # Un router por dominio de API
+│       ├── auth.py          # Registro e inicio de sesión (tenants)
+│       ├── admin.py         # Super admin: listado y gestión de tenants
 │       ├── sucursales.py
 │       ├── productos.py
 │       ├── categorias.py
 │       ├── ventas.py
-│       └── reportes.py  # Cierre de caja diario
-└── frontend/
-    ├── index.html       # SPA principal
-    ├── admin.html       # Panel super admin (standalone)
-    ├── css/styles.css
-    └── js/
-        ├── app.js       # Router SPA + selector de sucursal
-        ├── api.js       # Fetch wrapper con JWT automático
-        ├── auth.js      # Login/registro UI
-        ├── sucursal.js  # Estado compartido de sucursal activa
-        ├── pos.js       # Carrito, pago, recibo
-        ├── inventario.js
-        ├── dashboard.js # Reportes y cierre de caja
-        └── utils.js     # Toast, formatCOP
+│       └── reportes.py
+├── frontend/
+│   ├── index.html           # SPA principal (POS)
+│   ├── admin.html           # Panel super administrador
+│   ├── css/styles.css
+│   └── js/                  # app.js, api.js, auth.js, pos.js, etc.
+├── scripts/                 # Utilidades de desarrollo y mantenimiento
+│   ├── migrate.py
+│   ├── append_css.py
+│   ├── append_css2.py
+│   ├── replace.py
+│   ├── replace_js.py
+│   └── README.md
+├── data/                    # Archivos de base de datos (gitignored)
+│   └── *.db backups
+├── logs/                    # Archivos de log (gitignored)
+│   └── *.log
+├── docs/                    # Documentación adicional
+│   └── CLAUDE.md
+├── requirements.txt
+├── Procfile                 # Despliegue (p. ej. Railway)
+├── .env.example             # Plantilla de variables (copiar a .env)
+├── .gitignore               # Archivos y directorios ignorados por Git
+└── README.md
 ```
 
-### Multi-tenancy + Multi-sucursal
-
-Aislamiento en dos niveles:
-1. **Tenant** — `tenant_id` en el JWT, cada query filtra por él
-2. **Sucursal** — `sucursal_id` en cada request, productos/ventas/categorías pertenecen a una sede específica
+**Capas:** `core` (configuración) → `db` (sesión y `Base`) → `models.orm` (datos) → `schemas` (validación API) → `routes` (endpoints).
 
 ---
 
-## 🚀 Inicio rápido
+## Cómo ejecutar el proyecto
 
 ### Requisitos
-- Python 3.10+
-- pip
 
-### Instalación
+- Python 3.10 o superior  
+- `pip`
 
-```bash
-# Clonar el repo
-git clone https://github.com/zafirotech-JG/Tizon_MVP_Version_2.git
-cd Tizon_MVP_Version_2
+### Pasos
 
-# Crear entorno virtual
-python -m venv .venv
-.venv\Scripts\activate     # Windows
-source .venv/bin/activate  # Mac/Linux
+1. **Clonar e ir al directorio del repo**
 
-# Instalar dependencias
-pip install -r requirements.txt
+   ```bash
+   git clone https://github.com/zafirotech-JG/Tizon_MVP_Version_2.git
+   cd Tizon_MVP_Version_2
+   ```
 
-# Crear archivo de variables de entorno
-cp .env.example .env
-# Edita .env con tu SECRET_KEY
+2. **Entorno virtual e instalación**
 
-# Correr el servidor
-python -m uvicorn backend.main:app --reload
-```
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-Abre `http://localhost:8000` en el navegador.
+3. **Variables de entorno**
 
----
+   ```bash
+   copy .env.example .env
+   ```
 
-## ⚙️ Variables de entorno
+   Edita `.env` y define al menos un **`SECRET_KEY`** propio (en producción nunca uses el valor de ejemplo). Para desarrollo local con SQLite puedes dejar `DATABASE_URL=sqlite:///./tizon.db`.
 
-```env
-DATABASE_URL=sqlite:///./tizon.db   # Dev local
-SECRET_KEY=tu-clave-secreta-aqui    # JWT signing key — cámbiala en producción
-CORS_ORIGINS=*                      # Restringir en producción
-```
+4. **Arrancar el servidor** (desde la raíz del repo, donde está `backend/`)
 
-Para producción con Supabase:
-```env
-DATABASE_URL=postgresql://usuario:password@host:5432/tizon
-```
+   ```bash
+   python -m uvicorn backend.main:app --reload
+   ```
 
----
+5. **Abrir en el navegador**
 
-## 🗄️ Base de datos
+   - Aplicación POS: [http://localhost:8000](http://localhost:8000)  
+   - Documentación API: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-En desarrollo, SQLite se crea automáticamente al arrancar el servidor.
-
-Para producción (PostgreSQL / Supabase), correr en el SQL Editor:
-
-```sql
-CREATE TABLE sucursales (
-    id TEXT PRIMARY KEY,
-    tenant_id INTEGER NOT NULL REFERENCES tenants(id),
-    nombre TEXT NOT NULL,
-    activo BOOLEAN DEFAULT TRUE
-);
-ALTER TABLE productos  ADD COLUMN sucursal_id TEXT REFERENCES sucursales(id);
-ALTER TABLE categorias ADD COLUMN sucursal_id TEXT REFERENCES sucursales(id);
-ALTER TABLE ventas      ADD COLUMN sucursal_id TEXT REFERENCES sucursales(id);
-```
+El frontend se sirve desde el mismo proceso FastAPI; no hace falta otro servidor ni paso de build.
 
 ---
 
-## 👑 Activar el primer super admin
+## Usuarios y contraseñas
 
-```bash
-# 1. Regístrate normalmente en el sistema
-# 2. Abre SQLite y actualiza:
-.\sqlite3.exe tizon.db
-UPDATE tenants SET es_admin = 1 WHERE email = 'tu@email.com';
-.quit
+El sistema **no trae usuarios ni contraseñas por defecto**. Cada cuenta de negocio es un **tenant** en la tabla `tenants` (correo + contraseña hasheada).
 
-# 3. Accede al panel en:
-#    http://localhost:8000/admin
-```
+### 1. Usuario de restaurante (POS)
 
----
+1. En [http://localhost:8000](http://localhost:8000) elige **Registrarse** y crea una cuenta (correo, nombre y contraseña; mínimo 6 caracteres).  
+2. Tras registrarte quedas autenticado; puedes crear sucursales, productos y usar el POS.  
+3. En siguientes visitas usa **Iniciar sesión** con el **mismo correo y contraseña**.
 
-## 🌐 Despliegue en producción
+Las credenciales son las que **tú definiste** al registrarte; no hay un usuario demo fijo en el código.
 
-El proyecto está configurado para Railway + Supabase.
+### 2. Super administrador (`/admin`)
 
-1. Sube el repo a GitHub
-2. Conecta en [railway.app](https://railway.app)
-3. Railway detecta el `Procfile` y despliega automáticamente
-4. Agrega las variables de entorno en el panel de Railway
-5. Conecta tu dominio personalizado
+El panel [http://localhost:8000/admin](http://localhost:8000/admin) solo acepta cuentas con el flag **`es_admin = true`** en la base de datos.
 
----
+1. **Primero** crea un usuario normal con el registro del paso anterior (mismo correo y contraseña que usarás después).  
+2. **Marca ese usuario como admin** en la base de datos, por ejemplo con SQLite:
 
-## 🛣️ Roadmap
+   ```bash
+   sqlite3 tizon.db
+   ```
 
-- [ ] Período de prueba automático (15 días al registrarse)
-- [ ] PWA — instalable en tablet sin App Store
-- [ ] Exportar cierre de caja en CSV/PDF
-- [ ] Comanda digital para cocina
-- [ ] QR por mesa para pedidos del cliente
-- [ ] Bot de WhatsApp para confirmación de domicilios
+   ```sql
+   UPDATE tenants SET es_admin = 1 WHERE email = 'tu@correo.com';
+   .quit
+   ```
+
+3. Entra en [http://localhost:8000/admin](http://localhost:8000/admin) e inicia sesión con **el mismo correo y contraseña** del registro. El backend usa `POST /api/admin/login`, que exige `es_admin` y las mismas credenciales almacenadas para ese tenant.
+
+**Resumen:** no existen contraseñas preconfiguradas en el repositorio; el flujo es **registro → (opcional) promover a admin en BD → login** según la pantalla (POS o panel admin).
 
 ---
 
-## 🧱 Stack
+## Variables de entorno
 
-| Capa | Tecnología |
-|------|-----------|
-| Backend | FastAPI + SQLAlchemy |
-| Base de datos | SQLite (dev) / PostgreSQL (prod) |
-| Autenticación | JWT (python-jose + passlib bcrypt) |
-| Frontend | Vanilla JS SPA |
-| Despliegue | Railway + Supabase |
+| Variable        | Descripción |
+|----------------|-------------|
+| `DATABASE_URL` | SQLite local o cadena PostgreSQL en producción |
+| `SECRET_KEY`   | Firma de los JWT — debe ser secreta y estable |
+| `CORS_ORIGINS` | Orígenes permitidos separados por coma, o `*` en desarrollo |
 
 ---
 
-## 📄 Licencia
+## Despliegue
+
+El `Procfile` ejecuta:
+
+`uvicorn backend.main:app --host=0.0.0.0 --port=${PORT:-8000} --proxy-headers`
+
+Configura las mismas variables de entorno en tu plataforma (Railway, etc.) y usa PostgreSQL en producción si aplica.
+
+---
+
+## Licencia
 
 Propietario — ZafiroTech. Todos los derechos reservados.

@@ -1,53 +1,53 @@
 """
-main.py — Tizón POS · FastAPI app principal
-Cambios respecto al original:
-  - Agrega evento startup que crea las tablas SQL si no existen
-  - Elimina la importación de sheets (ya no se usa)
-  - Todo lo demás (CORS, static files, rutas) es idéntico
+Punto de entrada FastAPI: CORS, creación de tablas al arranque, API y frontend estático.
 """
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
-from backend.database import engine
-from backend import models_db                          # para crear tablas
-from backend.routes import auth, productos, ventas, reportes, categorias, sucursales, admin
+from backend.core.config import FRONTEND_DIR, cors_origins
+from backend.core.logger import logger
+from backend.db.session import Base, engine
+from backend.models import orm as _orm  # noqa: F401 — carga modelos para metadata
+from backend.routes import admin, auth, categorias, productos, reportes, sucursales, ventas
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Crea tablas si no existen (SQLite crea tizon.db; PostgreSQL usa el schema configurado)."""
+    logger.info("Iniciando aplicación Tizón POS")
+    try:
+        Base.metadata.create_all(bind=engine)
+        logger.info("Tablas de base de datos verificadas/creadas exitosamente")
+    except Exception as e:
+        logger.error(f"Error al crear tablas: {e}")
+        raise
+    
+    yield
+    
+    logger.info("Cerrando aplicación Tizón POS")
+
 
 app = FastAPI(
     title="Tizón POS API",
     description="Sistema de Punto de Venta para Asadero Colombiano — Multi-tenant",
     version="2.0.0",
+    lifespan=lifespan,
 )
 
-
-# ── Crear tablas al arrancar ─────────────────────────────────────────────
-@app.on_event("startup")
-def startup():
-    """
-    Crea todas las tablas definidas en models_db.py si no existen.
-    En SQLite esto crea el archivo tizon.db automáticamente.
-    En PostgreSQL crea las tablas en el schema public.
-    """
-    models_db.Base.metadata.create_all(bind=engine)
-
-
-# ── CORS ─────────────────────────────────────────────────────────────────
-cors_origins_str = os.getenv("CORS_ORIGINS", "*")
-origins = [o.strip() for o in cors_origins_str.split(",")] if cors_origins_str else ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins     = origins,
-    allow_credentials = True,
-    allow_methods     = ["*"],
-    allow_headers     = ["*"],
+    allow_origins=cors_origins(),
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-
-# ── Rutas API ─────────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(sucursales.router)
 app.include_router(productos.router)
@@ -56,21 +56,17 @@ app.include_router(ventas.router)
 app.include_router(reportes.router)
 app.include_router(admin.router)
 
+_frontend = str(FRONTEND_DIR)
 
-# ── Archivos estáticos (frontend) ─────────────────────────────────────────
-FRONTEND_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "frontend")
-)
-
-app.mount("/css", StaticFiles(directory=os.path.join(FRONTEND_DIR, "css")), name="css")
-app.mount("/js",  StaticFiles(directory=os.path.join(FRONTEND_DIR, "js")),  name="js")
+app.mount("/css", StaticFiles(directory=os.path.join(_frontend, "css")), name="css")
+app.mount("/js", StaticFiles(directory=os.path.join(_frontend, "js")), name="js")
 
 
 @app.get("/", include_in_schema=False)
 def serve_frontend():
-    return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+    return FileResponse(os.path.join(_frontend, "index.html"))
 
 
 @app.get("/admin", include_in_schema=False)
 def serve_admin():
-    return FileResponse(os.path.join(FRONTEND_DIR, "admin.html"))
+    return FileResponse(os.path.join(_frontend, "admin.html"))

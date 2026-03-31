@@ -1,7 +1,6 @@
 /**
  * auth.js — Maneja login Y registro de nuevos tenants
- * FIX: limpia sessionStorage en login, logout y registro
- * para que cada usuario vea solo sus propios datos.
+ * Guarda es_admin en localStorage para control de acceso en frontend.
  */
 
 import { API } from "./api.js";
@@ -12,20 +11,33 @@ export function initAuth() {
     verificarSesion();
 }
 
+/** Retorna true si el usuario autenticado es admin. */
+export function isAdmin() {
+    return localStorage.getItem("tizon_es_admin") === "true";
+}
+
 function bindEventos() {
-    // Login (igual que el original)
-    document.getElementById("btn-login")?.addEventListener("click", handleLogin);
+    // Login
+    document.getElementById("form-login")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        handleLogin();
+    });
     document.getElementById("btn-logout-desktop")?.addEventListener("click", handleLogout);
     document.getElementById("btn-logout-mobile")?.addEventListener("click", handleLogout);
 
-    document.getElementById("login-password")?.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") handleLogin();
+    // Registro
+    document.getElementById("form-registro")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        handleRegister();
     });
-
-    // Registro (nuevo)
-    document.getElementById("btn-register")?.addEventListener("click", handleRegister);
-    document.getElementById("link-ir-registro")?.addEventListener("click", mostrarRegistro);
-    document.getElementById("link-ir-login")?.addEventListener("click", mostrarLogin);
+    document.getElementById("link-ir-registro")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        mostrarRegistro();
+    });
+    document.getElementById("link-ir-login")?.addEventListener("click", (e) => {
+        e.preventDefault();
+        mostrarLogin();
+    });
 
     // Onboarding
     document.getElementById("btn-cerrar-bienvenida")?.addEventListener("click", cerrarBienvenida);
@@ -57,7 +69,7 @@ function verificarSesion() {
         overlay?.classList.remove("visible");
     } else {
         overlay?.classList.add("visible");
-        mostrarLogin();  // siempre empieza en la pantalla de login
+        mostrarLogin();
     }
 }
 
@@ -72,16 +84,14 @@ function mostrarRegistro() {
 }
 
 function limpiarCache() {
-    // Borra todos los datos cacheados del usuario anterior
-    // Evita que un usuario vea productos/categorias de otro
     sessionStorage.removeItem("tizon_productos");
     sessionStorage.removeItem("tizon_categorias");
 }
 
-// ── Login (idéntico al original) ────────────────────────────────────────
+// ── Login ────────────────────────────────────────────────────────────────
 async function handleLogin() {
     const username = document.getElementById("login-username")?.value.trim();
-    const password = document.getElementById("login-password")?.value.trim();
+    const password = document.getElementById("login-password")?.value;
     const btn      = document.getElementById("btn-login");
 
     if (!username || !password) {
@@ -95,14 +105,14 @@ async function handleLogin() {
     try {
         const res = await API.auth.login(username, password);
 
-        // Limpiar cache ANTES de guardar el nuevo token
         limpiarCache();
 
-        localStorage.setItem("tizon_token", res.access_token);
+        localStorage.setItem("tizon_token",      res.access_token);
+        localStorage.setItem("tizon_es_admin",   String(res.es_admin || false));
         if (res.nombre) localStorage.setItem("tizon_tenant_nombre", res.nombre);
+
         showToast("Sesión iniciada correctamente", "success");
 
-        // Ocultar overlay y notificar a app.js para cargar el POS
         document.getElementById("login-password").value = "";
         document.getElementById("login-overlay").classList.remove("visible");
         window.dispatchEvent(new CustomEvent("tizon:login"));
@@ -114,10 +124,10 @@ async function handleLogin() {
     }
 }
 
-// ── Registro (nuevo) ────────────────────────────────────────────────────
+// ── Registro ─────────────────────────────────────────────────────────────
 async function handleRegister() {
     const email    = document.getElementById("reg-email")?.value.trim();
-    const password = document.getElementById("reg-password")?.value.trim();
+    const password = document.getElementById("reg-password")?.value;
     const nombre   = document.getElementById("reg-nombre")?.value.trim();
     const btn      = document.getElementById("btn-register");
 
@@ -129,6 +139,10 @@ async function handleRegister() {
         showToast("La contraseña debe tener al menos 6 caracteres", "warning");
         return;
     }
+    if (password.length > 72) {
+        showToast("La contraseña no puede superar 72 caracteres", "warning");
+        return;
+    }
 
     btn.disabled    = true;
     btn.textContent = "Creando cuenta...";
@@ -136,18 +150,16 @@ async function handleRegister() {
     try {
         const res = await API.auth.register(email, password, nombre);
 
-        // Limpiar cache ANTES de guardar el nuevo token
         limpiarCache();
 
-        localStorage.setItem("tizon_token", res.access_token);
+        localStorage.setItem("tizon_token",      res.access_token);
+        localStorage.setItem("tizon_es_admin",   String(res.es_admin || false));
         localStorage.setItem("tizon_tenant_nombre", res.nombre);
         showToast(`Bienvenido, ${res.nombre}`, "success");
 
-        // Ocultar overlay y notificar a app.js para cargar el POS
         document.getElementById("login-overlay").classList.remove("visible");
         window.dispatchEvent(new CustomEvent("tizon:login"));
 
-        // Mostrar onboarding si el tenant aún no tiene sucursales
         try {
             const sucursales = await API.sucursales.listar();
             if (sucursales.length === 0) {
@@ -165,15 +177,13 @@ async function handleRegister() {
 }
 
 export function handleLogout() {
-    // Limpiar token Y cache al cerrar sesión
     localStorage.removeItem("tizon_token");
     localStorage.removeItem("tizon_tenant_nombre");
+    localStorage.removeItem("tizon_es_admin");
     limpiarCache();
 
-    // Notificar a app.js para resetear estado de todos los módulos
     window.dispatchEvent(new CustomEvent("tizon:logout"));
 
-    // Mostrar overlay de login sin recargar la página
     const overlay = document.getElementById("login-overlay");
     if (overlay) overlay.classList.add("visible");
     document.getElementById("form-login")?.classList.remove("hidden");

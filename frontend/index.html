@@ -5,11 +5,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0f0d0b" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔥</text></svg>">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Tizón V1 — POS Asadero</title>
   <meta name="description" content="Sistema de punto de venta para asadero colombiano — Tizón V1" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 
@@ -20,17 +23,17 @@
     <!-- ══ TOP BAR (mobile only) ══ -->
     <header class="topbar">
       <div class="topbar-left">
-        <span class="topbar-logo">🔥 Tizón</span>
+        <span class="topbar-logo"><i data-lucide="flame" class="icon-sm"></i> Tizón</span>
         <select id="selector-sucursal-mobile" class="select-sucursal-mobile" title="Sucursal activa"></select>
       </div>
       <button class="btn-icon" id="btn-logout-mobile"
-        style="font-size:1.2rem; border:none;" title="Cerrar Sesión">🚪</button>
+        style="font-size:1.2rem; border:none;" title="Cerrar Sesión"><i data-lucide="log-out" class="icon-sm"></i></button>
     </header>
 
     <!-- ══ SIDEBAR (desktop only) ══ -->
     <aside class="sidebar">
       <div class="sidebar-logo">
-        <h1>🔥 Tizón</h1>
+        <h1><i data-lucide="flame" class="icon-sm"></i> Tizón</h1>
         <p>POS v1.0</p>
       </div>
 
@@ -39,24 +42,24 @@
         <label class="sucursal-label">Sucursal activa</label>
         <div class="sucursal-selector-row">
           <select id="selector-sucursal" class="select-sucursal"></select>
-          <button id="btn-gestionar-sucursales" class="btn-sucursal-settings" title="Gestionar sucursales">⚙️</button>
+          <button id="btn-gestionar-sucursales" class="btn-sucursal-settings" title="Gestionar sucursales"><i data-lucide="settings" class="icon-sm"></i></button>
         </div>
         <button id="btn-nueva-sucursal" class="btn btn-ghost btn-nueva-suc">+ Nueva sucursal</button>
       </div>
 
       <nav>
         <div class="nav-item" data-seccion="pos">
-          <span class="icon">🛒</span><span>Punto de Venta</span>
+          <span class="icon"><i data-lucide="shopping-cart"></i></span><span>Punto de Venta</span>
         </div>
         <div class="nav-item" data-seccion="inventario">
-          <span class="icon">📦</span><span>Inventario</span>
+          <span class="icon"><i data-lucide="package"></i></span><span>Inventario</span>
         </div>
         <div class="nav-item" data-seccion="dashboard">
-          <span class="icon">📊</span><span>Dashboard</span>
+          <span class="icon"><i data-lucide="layout-dashboard"></i></span><span>Dashboard</span>
         </div>
       </nav>
       <div style="margin-top:auto; padding:20px;">
-        <button class="btn btn-ghost" id="btn-logout-desktop" style="width:100%;">🚪 Salir</button>
+        <button class="btn btn-ghost" id="btn-logout-desktop" style="width:100%;"><i data-lucide="log-out" class="icon-sm"></i> Salir</button>
       </div>
     </aside>
 
@@ -67,45 +70,50 @@
       <section id="seccion-pos" class="section">
         <div class="section-header">
           <h2 class="section-title">Punto de Venta</h2>
+          <!-- Botón solo visible en mobile para abrir panel del pedido -->
           <button class="btn btn-primary btn-cart-toggle" id="btn-cart-toggle" type="button">
-            🛒 Ver Carrito <span class="cart-badge" id="cart-badge">0</span>
+            <i data-lucide="shopping-cart" class="icon-sm"></i> Pedido <span class="cart-badge" id="cart-badge">0</span>
           </button>
         </div>
 
-        <div class="pos-layout">
-          <div class="pos-catalogo">
-            <div class="card">
-              <div class="catalogo-header">
-                <label>Selecciona productos para agregar al carrito</label>
-                <input type="text" id="buscar-producto" class="input-buscar" placeholder="🔍 Buscar producto…" autocomplete="off" />
-                <select id="filtro-categoria-pos">
-                  <option value="">Todas las categorías</option>
-                </select>
+        <!-- Split layout: catálogo izquierda + panel pedido derecha -->
+        <div class="pos-split">
+
+          <!-- ── CATÁLOGO CON TABS ── -->
+          <div class="catalogo-panel">
+            <div class="catalogo-search">
+              <div class="search-icon-wrap">
+                <i data-lucide="search" class="icon-sm"></i>
+                <input type="text" id="buscar-producto" class="input-buscar" placeholder="Buscar producto…" autocomplete="off" />
               </div>
-              <div id="grilla-productos" class="grilla-productos">
-                <p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1">Cargando productos…</p>
-              </div>
+            </div>
+            <!-- Tabs de categorías (se renderizan dinámicamente) -->
+            <div class="category-tabs" id="category-tabs"></div>
+            <!-- Grilla de productos de la categoría activa -->
+            <div id="grilla-productos" class="grilla-productos">
+              <p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1">Cargando productos…</p>
             </div>
           </div>
 
+          <!-- ── PANEL DEL PEDIDO ── -->
           <div id="panel-carrito" class="panel-carrito">
             <div class="panel-handle"></div>
             <div class="carrito-header">
-              <h3>🛒 Resumen de Venta</h3>
-              <button class="btn-icon btn-cerrar-carrito" id="btn-cerrar-carrito" type="button" title="Cerrar">✕</button>
+              <h3><i data-lucide="shopping-cart" class="icon-sm"></i> Pedido</h3>
+              <button class="btn-icon btn-cerrar-carrito" id="btn-cerrar-carrito" type="button" title="Cerrar"><i data-lucide="x" class="icon-sm"></i></button>
             </div>
 
             <div id="carrito-items" class="carrito-items">
               <div class="carrito-vacio">
-                <span class="carrito-vacio-icon">🛒</span>
-                <p>Tu carrito está vacío</p>
+                <span class="carrito-vacio-icon"><i data-lucide="shopping-cart" style="width: 48px; height: 48px"></i></span>
+                <p>Pedido vacío</p>
                 <span>Selecciona productos del catálogo</span>
               </div>
             </div>
 
             <div class="domicilio-toggle">
               <div class="domicilio-info">
-                <span class="domicilio-label">🏍️ Envío a Domicilio</span>
+                <span class="domicilio-label"><i data-lucide="bike" class="icon-sm"></i> Envío a Domicilio</span>
                 <span class="domicilio-desc">+ $1.000 por cada unidad</span>
               </div>
               <label class="switch">
@@ -120,7 +128,7 @@
                 <span class="resumen-valor" id="carrito-subtotal">$0</span>
               </div>
               <div class="resumen-item" id="fila-domicilio" style="display:none;">
-                <span class="resumen-label">🏍️ Domicilio</span>
+                <span class="resumen-label"><i data-lucide="bike" class="icon-sm"></i> Domicilio</span>
                 <span class="resumen-valor" id="carrito-domicilio">$0</span>
               </div>
               <div class="resumen-item resumen-total">
@@ -129,15 +137,38 @@
               </div>
             </div>
 
+            <!-- Método de pago inline en el panel -->
+            <div class="pago-inline" id="pago-inline" style="display:none">
+              <p class="pago-inline-title">Método de Pago</p>
+              <div class="pago-pills" id="pago-pills-inline">
+                <button class="pago-pill" data-valor="Efectivo" type="button"><i data-lucide="banknote" class="icon-sm"></i> Efectivo</button>
+                <button class="pago-pill" data-valor="Nequi" type="button"><i data-lucide="smartphone" class="icon-sm"></i> Nequi</button>
+                <button class="pago-pill" data-valor="Daviplata" type="button"><i data-lucide="smartphone" class="icon-sm"></i> Daviplata</button>
+                <button class="pago-pill" data-valor="Tarjeta" type="button"><i data-lucide="credit-card" class="icon-sm"></i> Tarjeta</button>
+              </div>
+              <div class="form-group pago-efectivo-group" id="pago-efectivo-group-inline" style="display:none;">
+                <label for="pago-recibido-inline">Dinero Recibido (COP)</label>
+                <input type="number" id="pago-recibido-inline" placeholder="Ej: 50000" min="0" step="100" inputmode="numeric" />
+                <div class="pago-cambio" id="pago-cambio-wrap-inline" style="display:none;">
+                  <span class="pago-cambio-label">Cambio:</span>
+                  <span class="pago-cambio-valor" id="pago-cambio-inline">$0</span>
+                </div>
+              </div>
+            </div>
+
             <div class="carrito-actions">
               <button class="btn btn-cobrar" id="btn-cobrar" type="button" disabled>
-                💰 Cobrar
+                <i data-lucide="circle-dollar-sign" class="icon-sm"></i> Cobrar
+              </button>
+              <button class="btn btn-primary btn-registrar-inline" id="btn-registrar-inline" type="button" disabled style="display:none">
+                <i data-lucide="check-circle" class="icon-sm"></i> Registrar Venta
               </button>
               <button class="btn btn-ghost btn-limpiar" id="btn-limpiar-carrito" type="button">
-                🗑️ Vaciar Carrito
+                <i data-lucide="trash-2" class="icon-sm"></i> Vaciar
               </button>
             </div>
           </div>
+
         </div>
       </section>
 
@@ -146,6 +177,12 @@
         <div class="section-header">
           <h2 class="section-title">Inventario / Menú</h2>
           <button class="btn btn-primary" id="btn-nuevo-producto">+ Nuevo</button>
+        </div>
+
+        <!-- Gestión de categorías (solo admin) -->
+        <div id="seccion-categorias-admin" style="display:none;">
+          <p class="section-label"><i data-lucide="tag" class="icon-sm"></i> Gestionar Categorías</p>
+          <div class="cat-admin-lista" id="lista-categorias-admin"></div>
         </div>
 
         <div class="table-wrap">
@@ -182,23 +219,23 @@
           <p class="section-label">Cierre de Caja</p>
           <div class="resumen-grid">
             <div class="metric-card highlight">
-              <span class="metric-label">💰 Total del Día</span>
+              <span class="metric-label"><i data-lucide="circle-dollar-sign" class="icon-sm"></i> Total del Día</span>
               <span class="metric-value" id="resumen-total">—</span>
             </div>
             <div class="metric-card">
-              <span class="metric-label">💵 Efectivo</span>
+              <span class="metric-label"><i data-lucide="banknote" class="icon-sm"></i> Efectivo</span>
               <span class="metric-value" id="resumen-efectivo">—</span>
             </div>
             <div class="metric-card">
-              <span class="metric-label">💜 Nequi</span>
+              <span class="metric-label"><i data-lucide="smartphone" class="icon-sm"></i> Nequi</span>
               <span class="metric-value" id="resumen-nequi">—</span>
             </div>
             <div class="metric-card">
-              <span class="metric-label">🔴 Daviplata</span>
+              <span class="metric-label"><i data-lucide="smartphone" class="icon-sm"></i> Daviplata</span>
               <span class="metric-value" id="resumen-daviplata">—</span>
             </div>
             <div class="metric-card">
-              <span class="metric-label">💳 Tarjeta</span>
+              <span class="metric-label"><i data-lucide="credit-card" class="icon-sm"></i> Tarjeta</span>
               <span class="metric-value" id="resumen-tarjeta">—</span>
             </div>
           </div>
@@ -231,6 +268,27 @@
             </table>
           </div>
         </div>
+
+        <!-- Historial detallado de ventas (solo para admin) -->
+        <div id="seccion-historial-ventas" style="display:none;">
+          <p class="section-label"><i data-lucide="list" class="icon-sm"></i> Historial de Transacciones <span style="font-size:0.75rem;color:var(--accent);font-weight:700;margin-left:6px;">ADMIN</span></p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Hora</th>
+                  <th>Producto</th>
+                  <th class="text-center">Cant.</th>
+                  <th class="text-right">Total</th>
+                  <th class="text-center">Método</th>
+                  <th class="text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tabla-ventas-historial-body"></tbody>
+            </table>
+          </div>
+        </div>
+
       </section>
 
     </main>
@@ -238,13 +296,13 @@
     <!-- ══ BOTTOM NAV (mobile only) ══ -->
     <nav class="bottom-nav">
       <div class="nav-item" data-seccion="pos">
-        <span class="icon">🛒</span><span>Caja</span>
+        <span class="icon"><i data-lucide="shopping-cart"></i></span><span>Caja</span>
       </div>
       <div class="nav-item" data-seccion="inventario">
-        <span class="icon">📦</span><span>Menú</span>
+        <span class="icon"><i data-lucide="package"></i></span><span>Menú</span>
       </div>
       <div class="nav-item" data-seccion="dashboard">
-        <span class="icon">📊</span><span>Reportes</span>
+        <span class="icon"><i data-lucide="layout-dashboard"></i></span><span>Reportes</span>
       </div>
     </nav>
 
@@ -299,7 +357,7 @@
   <div id="modal-pago" class="modal-overlay">
     <div class="modal modal-pago">
       <div class="modal-handle"></div>
-      <h3 class="modal-title">💰 Pasarela de Pago</h3>
+      <h3 class="modal-title"><i data-lucide="circle-dollar-sign" class="icon-sm"></i> Pasarela de Pago</h3>
 
       <div class="pago-resumen-pedido" id="pago-resumen-pedido"></div>
 
@@ -309,7 +367,7 @@
           <span class="resumen-valor" id="pago-subtotal">$0</span>
         </div>
         <div class="resumen-item" id="pago-fila-domicilio" style="display:none;">
-          <span class="resumen-label">🏍️ Domicilio</span>
+          <span class="resumen-label"><i data-lucide="bike" class="icon-sm"></i> Domicilio</span>
           <span class="resumen-valor" id="pago-domicilio">$0</span>
         </div>
         <div class="resumen-item resumen-total">
@@ -321,10 +379,10 @@
       <div class="form-group">
         <label>Método de Pago *</label>
         <div class="pago-pills" id="pago-pills">
-          <button class="pago-pill" data-valor="Efectivo" type="button">💵 Efectivo</button>
-          <button class="pago-pill" data-valor="Nequi" type="button">💜 Nequi</button>
-          <button class="pago-pill" data-valor="Daviplata" type="button">🔴 Daviplata</button>
-          <button class="pago-pill" data-valor="Tarjeta" type="button">💳 Tarjeta</button>
+          <button class="pago-pill" data-valor="Efectivo" type="button"><i data-lucide="banknote" class="icon-sm"></i> Efectivo</button>
+          <button class="pago-pill" data-valor="Nequi" type="button"><i data-lucide="smartphone" class="icon-sm"></i> Nequi</button>
+          <button class="pago-pill" data-valor="Daviplata" type="button"><i data-lucide="smartphone" class="icon-sm"></i> Daviplata</button>
+          <button class="pago-pill" data-valor="Tarjeta" type="button"><i data-lucide="credit-card" class="icon-sm"></i> Tarjeta</button>
         </div>
       </div>
 
@@ -340,7 +398,7 @@
       <div class="modal-actions">
         <button class="btn btn-ghost" id="btn-cancelar-pago" type="button">Cancelar</button>
         <button class="btn btn-primary btn-registrar-venta" id="btn-registrar-venta" type="button" disabled>
-          ✅ Registrar Venta
+          <i data-lucide="check-circle" class="icon-sm"></i> Registrar Venta
         </button>
       </div>
     </div>
@@ -372,7 +430,7 @@
   <div id="panel-sucursales" class="modal-overlay">
     <div class="modal modal-sucursal-panel">
       <div class="modal-handle"></div>
-      <h3 class="modal-title">⚙️ Gestionar Sucursales</h3>
+      <h3 class="modal-title"><i data-lucide="settings" class="icon-sm"></i> Gestionar Sucursales</h3>
 
       <div id="lista-sucursales-admin" class="sucursales-admin-lista"></div>
 
@@ -387,7 +445,7 @@
   <div id="modal-bienvenida" class="modal-overlay">
     <div class="modal">
       <div class="modal-handle"></div>
-      <h3 class="modal-title">👋 ¡Bienvenido a Tizón!</h3>
+      <h3 class="modal-title"><i data-lucide="hand" class="icon-sm"></i> ¡Bienvenido a Tizón!</h3>
       <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">
         Sigue estos 3 pasos para empezar a vender:
       </p>
@@ -433,11 +491,11 @@
   <div id="login-overlay" class="login-overlay visible">
     <div class="login-card">
       <div class="login-logo">
-        <h1 style="font-size: 2rem; margin-bottom: 4px;">🔥 Tizón</h1>
+        <h1 style="font-size: 2rem; margin-bottom: 4px;"><i data-lucide="flame" class="icon-sm"></i> Tizón</h1>
         <p style="color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; font-size:0.8rem;">Control de Acceso</p>
       </div>
 
-      <div id="form-login">
+      <form id="form-login">
         <div class="form-group" style="margin-bottom:12px; text-align:left;">
           <label for="login-username">Correo / Usuario</label>
           <input type="text" id="login-username" placeholder="Ingresa tu correo" autocomplete="username" />
@@ -446,14 +504,14 @@
           <label for="login-password">Contraseña</label>
           <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
         </div>
-        <button class="btn btn-primary" id="btn-login" style="width:100%; padding:14px; font-size:1rem;">Entrar</button>
+        <button type="submit" class="btn btn-primary" id="btn-login" style="width:100%; padding:14px; font-size:1rem;">Entrar</button>
         <p style="text-align:center; margin-top:16px; font-size:0.85rem; color:var(--text-muted);">
           ¿No tienes cuenta?
           <a id="link-ir-registro" href="#" style="color:var(--primary); text-decoration:none;">Regístrate gratis</a>
         </p>
-      </div>
+      </form>
 
-      <div id="form-registro" class="hidden">
+      <form id="form-registro" class="hidden">
         <div class="form-group" style="margin-bottom:12px; text-align:left;">
           <label for="reg-nombre">Nombre del negocio</label>
           <input type="text" id="reg-nombre" placeholder="Ej: Asadero El Tizón" autocomplete="organization" />
@@ -466,19 +524,26 @@
           <label for="reg-password">Contraseña</label>
           <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
         </div>
-        <button class="btn btn-primary" id="btn-register" style="width:100%; padding:14px; font-size:1rem;">Crear cuenta</button>
+        <button type="submit" class="btn btn-primary" id="btn-register" style="width:100%; padding:14px; font-size:1rem;">Crear cuenta</button>
         <p style="text-align:center; margin-top:16px; font-size:0.85rem; color:var(--text-muted);">
           ¿Ya tienes cuenta?
           <a id="link-ir-login" href="#" style="color:var(--primary); text-decoration:none;">Inicia sesión</a>
         </p>
-      </div>
+      </form>
     </div>
   </div>
 
   <!-- ══ TOASTS ══ -->
   <div id="toast-container"></div>
 
+  <!-- ══ FLOATING HELP BTN ══ -->
+  <button id="btn-tutorial-help" class="btn-icon" style="position:fixed;bottom:20px;right:20px;z-index:9999;background:var(--primary);color:var(--text-primary);box-shadow:0 4px 12px rgba(0,0,0,0.3);width:45px;height:45px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Reiniciar Tutorial">
+    <i data-lucide="help-circle" class="icon-md" style="margin:0;"></i>
+  </button>
+
   <!-- ══ SCRIPTS ══ -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
   <script type="module" src="js/app.js"></script>
 
 </body>

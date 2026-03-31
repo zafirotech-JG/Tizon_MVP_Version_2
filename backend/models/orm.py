@@ -1,5 +1,5 @@
 """
-models_db.py — Modelos SQLAlchemy (tablas de la base de datos)
+Modelos SQLAlchemy — tablas de la base de datos.
 
 Tablas:
   tenants    → un registro por cliente (negocio)
@@ -28,21 +28,24 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    Column, String, Float, Integer, Boolean,
-    DateTime, ForeignKey, Text
+    Boolean,
+    Column,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
 )
 from sqlalchemy.orm import relationship
 
-from backend.database import Base
+from backend.db.session import Base
 
 
 def _uuid() -> str:
     return str(uuid.uuid4())
 
 
-# ─────────────────────────────────────────────
-#  TENANTS  (clientes del SaaS)
-# ─────────────────────────────────────────────
 class Tenant(Base):
     __tablename__ = "tenants"
 
@@ -63,14 +66,11 @@ class Tenant(Base):
     categorias = relationship("Categoria", back_populates="tenant", cascade="all, delete-orphan")
 
 
-# ─────────────────────────────────────────────
-#  SUCURSALES  (locales del negocio)
-# ─────────────────────────────────────────────
 class Sucursal(Base):
     __tablename__ = "sucursales"
 
     id        = Column(String,  primary_key=True, default=_uuid)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     nombre    = Column(String,  nullable=False)
     activo    = Column(Boolean, default=True)
 
@@ -80,15 +80,12 @@ class Sucursal(Base):
     categorias = relationship("Categoria", back_populates="sucursal", cascade="all, delete-orphan")
 
 
-# ─────────────────────────────────────────────
-#  PRODUCTOS
-# ─────────────────────────────────────────────
 class Producto(Base):
     __tablename__ = "productos"
 
     id          = Column(String,  primary_key=True, default=_uuid)
-    tenant_id   = Column(Integer, ForeignKey("tenants.id"),   nullable=False, index=True)
-    sucursal_id = Column(String,  ForeignKey("sucursales.id"), nullable=True,  index=True)
+    tenant_id   = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
+    sucursal_id = Column(String,  ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=True,  index=True)
     nombre      = Column(String,  nullable=False)
     precio      = Column(Float,   nullable=False)
     insumos     = Column(Text,    default="")
@@ -99,15 +96,12 @@ class Producto(Base):
     sucursal = relationship("Sucursal", back_populates="productos")
 
 
-# ─────────────────────────────────────────────
-#  VENTAS
-# ─────────────────────────────────────────────
 class Venta(Base):
     __tablename__ = "ventas"
 
     id               = Column(String,   primary_key=True, default=_uuid)
-    tenant_id        = Column(Integer,  ForeignKey("tenants.id"),   nullable=False, index=True)
-    sucursal_id      = Column(String,   ForeignKey("sucursales.id"), nullable=True,  index=True)
+    tenant_id        = Column(Integer,  ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
+    sucursal_id      = Column(String,   ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=True,  index=True)
     fecha            = Column(DateTime, default=datetime.utcnow, index=True)
     producto_id      = Column(String,   nullable=False)
     producto_nombre  = Column(String,   nullable=False)
@@ -115,20 +109,18 @@ class Venta(Base):
     precio_unitario  = Column(Float,    nullable=False)
     total            = Column(Float,    nullable=False)
     metodo_pago      = Column(String,   nullable=False)
+    anulada          = Column(Boolean,  default=False)
 
     tenant   = relationship("Tenant",   back_populates="ventas")
     sucursal = relationship("Sucursal", back_populates="ventas")
 
 
-# ─────────────────────────────────────────────
-#  CATEGORIAS
-# ─────────────────────────────────────────────
 class Categoria(Base):
     __tablename__ = "categorias"
 
     id          = Column(String,  primary_key=True, default=_uuid)
-    tenant_id   = Column(Integer, ForeignKey("tenants.id"),   nullable=False, index=True)
-    sucursal_id = Column(String,  ForeignKey("sucursales.id"), nullable=True,  index=True)
+    tenant_id   = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
+    sucursal_id = Column(String,  ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=True,  index=True)
     nombre      = Column(String,  nullable=False)
     activo      = Column(Boolean, default=True)
 

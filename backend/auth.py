@@ -6,32 +6,29 @@ Cambios respecto al original:
   - get_current_user ahora retorna dict {email, tenant_id} en vez de str
     para que las rutas puedan leer el tenant_id del usuario autenticado
 """
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from passlib.context import CryptContext
-from dotenv import load_dotenv
+import bcrypt
 
-load_dotenv()
-
-SECRET_KEY                = os.getenv("SECRET_KEY", "cambia-este-secreto-en-produccion")
+from backend.core.config import SECRET_KEY
 ALGORITHM                 = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 8   # duración de una jornada laboral
 
-pwd_ctx       = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme = HTTPBearer(auto_error=False)   # igual que el original
-
 
 # ── Helpers de contraseña ────────────────────────────────────────────────
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_ctx.verify(plain, hashed)
+    try:
+        return bcrypt.checkpw(plain.encode('utf-8'), hashed.encode('utf-8'))
+    except ValueError:
+        return False
 
 def hash_password(plain: str) -> str:
-    return pwd_ctx.hash(plain)
+    return bcrypt.hashpw(plain.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 
 # ── Token ────────────────────────────────────────────────────────────────

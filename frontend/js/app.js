@@ -8,6 +8,7 @@ import { initDashboard, resetDashboard }   from "./dashboard.js";
 import { setSucursal, getSucursal, resetSucursal, setSucursales, getSucursales } from "./sucursal.js";
 import { API }       from "./api.js";
 import { showToast } from "./utils.js";
+import { iniciarTutorial, bindTutorialEvents } from "./tutorial.js";
 
 let seccionActual = "pos";
 
@@ -206,8 +207,8 @@ function renderListaSucursales() {
         <div class="sucursal-admin-item">
             <span class="sucursal-admin-nombre">${s.nombre}</span>
             <div class="sucursal-admin-actions">
-                <button class="btn-icon" data-editar-id="${s.id}" data-editar-nombre="${s.nombre}" title="Renombrar">✏️</button>
-                <button class="btn-icon" data-eliminar-id="${s.id}" data-eliminar-nombre="${s.nombre}" title="Eliminar">🗑️</button>
+                <button class="btn-icon" data-editar-id="${s.id}" data-editar-nombre="${s.nombre}" title="Renombrar"><i data-lucide="pencil" class="icon-sm"></i></button>
+                <button class="btn-icon" data-eliminar-id="${s.id}" data-eliminar-nombre="${s.nombre}" title="Eliminar"><i data-lucide="trash-2" class="icon-sm"></i></button>
             </div>
         </div>
     `).join("");
@@ -258,6 +259,7 @@ window.addEventListener("tizon:login", async () => {
     resetTodosLosModulos();
     await cargarSucursales();
     mostrarSeccion("pos");
+    setTimeout(() => iniciarTutorial(), 800);
 });
 
 window.addEventListener("tizon:logout", () => {
@@ -270,6 +272,7 @@ window.addEventListener("tizon:logout", () => {
 // ── Arranque ──────────────────────────────────────────────────────────────
 import { initAuth } from "./auth.js";
 initAuth();
+bindTutorialEvents();
 mostrarSeccion("pos");
 
 // Si ya hay token (recarga de página), cargar sucursales sin esperar tizon:login

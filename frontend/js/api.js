@@ -4,7 +4,7 @@
 
 const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const BASE_URL = isLocal
-    ? `${window.location.protocol}//127.0.0.1:8000`
+    ? ""
     : "https://tizon-mvp.up.railway.app";
 
 async function request(method, path, body = null) {
@@ -77,12 +77,21 @@ export const API = {
     },
 
     categorias: {
-        listar: (sucursal_id) => request("GET",  `/api/categorias?sucursal_id=${sucursal_id}`),
-        crear:  (data)        => request("POST", "/api/categorias", data),
+        listar:   (sucursal_id) => request("GET",    `/api/categorias?sucursal_id=${sucursal_id}`),
+        crear:    (data)        => request("POST",   "/api/categorias", data),
+        editar:   (id, data)    => request("PUT",    `/api/categorias/${id}`, data),
+        eliminar: (id)          => request("DELETE", `/api/categorias/${id}`),
     },
 
     ventas: {
-        registrar: (data) => request("POST", "/api/ventas", data),
+        listar:    (sucursal_id, fecha = null) => {
+            const qs = new URLSearchParams({ sucursal_id });
+            if (fecha) qs.set("fecha", fecha);
+            return request("GET", `/api/ventas?${qs}`);
+        },
+        registrar: (data)         => request("POST",   "/api/ventas", data),
+        editar:    (id, data, pin) => request("PUT",    `/api/ventas/${id}?pin=${encodeURIComponent(pin)}`, data),
+        anular:    (id, pin)       => request("DELETE", `/api/ventas/${id}?pin=${encodeURIComponent(pin)}`),
     },
 
     reportes: {

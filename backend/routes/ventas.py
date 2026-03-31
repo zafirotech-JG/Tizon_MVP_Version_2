@@ -1,17 +1,66 @@
 """
-routes/ventas.py — Registro de transacciones POS por sucursal
+routes/ventas.py — Registro, listado y anulación de transacciones POS
 """
 from datetime import datetime
+from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
-from backend.database import get_db
-from backend.models import VentaCreate, VentaOut
-from backend.models_db import Producto, Sucursal, Venta
+from backend.db.session import get_db
+from backend.models.orm import Producto, Sucursal, Venta
+from backend.schemas import VentaCreate, VentaOut, VentaListOut, VentaUpdate
 from backend.auth import get_current_user
+from backend.core.config import ADMIN_PIN
 
 router = APIRouter(prefix="/api/ventas", tags=["Ventas"])
+
+
+@router.get("", response_model=list[VentaListOut])
+def listar_ventas(
+    sucursal_id: str = Query(..., description="ID de la sucursal"),
+    fecha: Optional[str] = Query(None, description="Fecha YYYY-MM-DD. Default: hoy"),
+    user: dict    = Depends(get_current_user),
+    db:   Session = Depends(get_db),
+):
+    """Lista ventas del día para una sucursal (solo admin o tenant propio)."""
+    sucursal = db.query(Sucursal).filter(
+        Sucursal.id        == sucursal_id,
+        Sucursal.tenant_id == user["tenant_id"],
+        Sucursal.activo    == True,
+    ).first()
+    if not sucursal:
+        raise HTTPException(status_code=404, detail="Sucursal no encontrada")
+
+    if fecha is None:
+        from datetime import date
+        fecha = date.today().isoformat()
+
+    ventas = (
+        db.query(Venta)
+        .filter(
+            Venta.tenant_id   == user["tenant_id"],
+            Venta.sucursal_id == sucursal_id,
+            func.date(Venta.fecha) == fecha,
+        )
+        .order_by(Venta.fecha.desc())
+        .all()
+    )
+
+    return [
+        VentaListOut(
+            id              = v.id,
+            fecha           = v.fecha.strftime("%Y-%m-%d %H:%M:%S"),
+            producto_nombre = v.producto_nombre,
+            cantidad        = v.cantidad,
+            precio_unitario = v.precio_unitario,
+            total           = v.total,
+            metodo_pago     = v.metodo_pago,
+            anulada         = v.anulada,
+        )
+        for v in ventas
+    ]
 
 
 @router.post("", response_model=VentaOut, status_code=201)
@@ -75,6 +124,7 @@ def registrar_venta(
         precio_unitario = precio_producto,
         total           = total,
         metodo_pago     = data.metodo_pago.value,
+        anulada         = False,
     )
     db.add(venta)
     db.commit()
@@ -89,4 +139,65 @@ def registrar_venta(
         precio_unitario = venta.precio_unitario,
         total           = venta.total,
         metodo_pago     = venta.metodo_pago,
+        anulada         = venta.anulada,
     )
+
+
+@router.put("/{venta_id}", response_model=VentaOut)
+def editar_venta(
+    venta_id: str,
+    data: VentaUpdate,
+    pin: str      = Query(..., description="Código PIN de administrador"),
+    user: dict    = Depends(get_current_user),
+    db:   Session = Depends(get_db),
+):
+    """Edita el método de pago de una venta. Requiere PIN de admin."""
+    if pin != ADMIN_PIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="PIN incorrecto")
+
+    venta = db.query(Venta).filter(
+        Venta.id        == venta_id,
+        Venta.tenant_id == user["tenant_id"],
+    ).first()
+    if not venta:
+        raise HTTPException(status_code=404, detail="Venta no encontrada")
+    if venta.anulada:
+        raise HTTPException(status_code=400, detail="No se puede editar una venta anulada")
+
+    venta.metodo_pago = data.metodo_pago.value
+    db.commit()
+    db.refresh(venta)
+
+    return VentaOut(
+        id              = venta.id,
+        fecha           = venta.fecha.strftime("%Y-%m-%d %H:%M:%S"),
+        producto_id     = venta.producto_id,
+        producto_nombre = venta.producto_nombre,
+        cantidad        = venta.cantidad,
+        precio_unitario = venta.precio_unitario,
+        total           = venta.total,
+        metodo_pago     = venta.metodo_pago,
+        anulada         = venta.anulada,
+    )
+
+
+@router.delete("/{venta_id}", status_code=204)
+def anular_venta(
+    venta_id: str,
+    pin: str      = Query(..., description="Código PIN de administrador"),
+    user: dict    = Depends(get_current_user),
+    db:   Session = Depends(get_db),
+):
+    """Anula (soft delete) una venta. Requiere PIN de administrador."""
+    if pin != ADMIN_PIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="PIN incorrecto")
+
+    venta = db.query(Venta).filter(
+        Venta.id        == venta_id,
+        Venta.tenant_id == user["tenant_id"],
+    ).first()
+    if not venta:
+        raise HTTPException(status_code=404, detail="Venta no encontrada")
+
+    venta.anulada = True
+    db.commit()

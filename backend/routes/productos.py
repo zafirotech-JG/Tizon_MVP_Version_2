@@ -7,9 +7,9 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Query
 from sqlalchemy.orm import Session
 
-from backend.database import get_db
-from backend.models import ProductoCreate, ProductoOut
-from backend.models_db import Producto, Sucursal
+from backend.db.session import get_db
+from backend.models.orm import Producto, Sucursal
+from backend.schemas import ProductoCreate, ProductoOut
 from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/productos", tags=["Productos"])

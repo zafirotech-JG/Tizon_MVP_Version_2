@@ -1,23 +1,21 @@
 /**
- * Inventario Module — CRUD de productos por sucursal
+ * Inventario Module — CRUD de productos + gestión de categorías (admin)
  */
 
 import { API }                  from "./api.js";
 import { getSucursalId }        from "./sucursal.js";
 import { showToast, formatCOP } from "./utils.js";
+import { cargarYRenderizarCategorias, getCategorias } from "./categorias.js";
 
 let productoEditandoId = null;
-let categorias         = [];
 
 let _inventarioIniciado = false;
 
 export function resetInventario() {
-    categorias = [];
-
     const tbody = document.getElementById("tabla-productos-body");
     if (tbody) tbody.innerHTML = "";
 
-    const selectCat = document.getElementById("producto-categoria");
+    const selectCat = document.getElementById("form-producto-categoria");
     if (selectCat) selectCat.innerHTML = '<option value="General">General</option>';
 }
 
@@ -26,22 +24,17 @@ export function initInventario() {
         bindEventos();
         _inventarioIniciado = true;
     }
-    cargarCategorias();
-    cargarTabla();
+    cargarTodo();
+
+    // Recargar categorías si otro módulo las modifica
+    window.addEventListener("tizon:categorias-updated", () => {
+        cargarTodo();
+    });
 }
 
-async function cargarCategorias() {
-    const sucursalId = getSucursalId();
-    if (!sucursalId) return;
-
-    try {
-        categorias = await API.categorias.listar(sucursalId);
-        poblarSelectCategoria();
-    } catch (err) {
-        categorias = [];
-        poblarSelectCategoria();
-        showToast(`Error cargando categorías: ${err.message}`, "warning");
-    }
+async function cargarTodo() {
+    await cargarYRenderizarCategorias();
+    await cargarTabla();
 }
 
 async function cargarTabla() {
@@ -78,16 +71,16 @@ function renderTabla(productos) {
     tbody.innerHTML = productos.map(p => `
         <tr>
             <td>${p.nombre}</td>
-            <td>${p.categoria || "General"}</td>
+            <td><span class="cat-badge">${p.categoria || "General"}</span></td>
             <td>${formatCOP(p.precio)}</td>
             <td class="insumos-cell">${p.insumos || "—"}</td>
             <td class="acciones-cell">
                 <button class="btn-icon btn-editar" data-id="${p.id}"
                     data-nombre="${p.nombre}" data-precio="${p.precio}"
                     data-insumos="${p.insumos || ""}" data-categoria="${p.categoria || "General"}">
-                    ✏️
+                    <i data-lucide="pencil" class="icon-sm"></i>
                 </button>
-                <button class="btn-icon btn-eliminar" data-id="${p.id}">🗑️</button>
+                <button class="btn-icon btn-eliminar" data-id="${p.id}"><i data-lucide="trash-2" class="icon-sm"></i></button>
             </td>
         </tr>
     `).join("");
@@ -98,6 +91,8 @@ function renderTabla(productos) {
     tbody.querySelectorAll(".btn-eliminar").forEach(btn => {
         btn.addEventListener("click", () => eliminarProducto(btn.dataset.id));
     });
+
+    if (window.lucide) window.lucide.createIcons();
 }
 
 function abrirModal(titulo = "Nuevo Producto") {
@@ -108,7 +103,8 @@ function abrirModal(titulo = "Nuevo Producto") {
     document.getElementById("form-producto-insumos").value = "";
     document.getElementById("form-categoria-nueva").value  = "";
     poblarSelectCategoria();
-    document.getElementById("form-producto-categoria").value = categorias[0]?.nombre || "";
+    const cats = getCategorias();
+    document.getElementById("form-producto-categoria").value = cats[0]?.nombre || "";
     toggleNuevaCategoriaInput();
     document.getElementById("modal-producto").classList.add("open");
 }
@@ -135,6 +131,7 @@ function cerrarModal() {
 function poblarSelectCategoria() {
     const select = document.getElementById("form-producto-categoria");
     if (!select) return;
+    const categorias = getCategorias();
     const opciones = categorias.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join("");
     select.innerHTML = `
         <option value="">Selecciona una categoría</option>
@@ -168,7 +165,7 @@ async function resolverCategoriaSeleccionada() {
 
     try {
         const creada = await API.categorias.crear({ nombre: nuevaCategoria, sucursal_id: sucursalId });
-        await cargarCategorias();
+        await cargarYRenderizarCategorias();
         return creada.nombre;
     } catch (err) {
         showToast(`Error creando categoría: ${err.message}`, "error");
@@ -193,10 +190,10 @@ async function guardarProducto() {
     try {
         if (productoEditandoId) {
             await API.productos.editar(productoEditandoId, { nombre, precio, insumos, categoria, sucursal_id: sucursalId });
-            showToast("Producto actualizado ✅", "success");
+            showToast("Producto actualizado", "success");
         } else {
             await API.productos.crear({ nombre, precio, insumos, categoria, sucursal_id: sucursalId });
-            showToast("Producto creado ✅", "success");
+            showToast("Producto creado", "success");
         }
         cerrarModal();
         await cargarTabla();

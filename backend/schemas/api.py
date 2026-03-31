@@ -1,10 +1,11 @@
 """
-models.py — Schemas Pydantic para validación de entrada/salida
+Schemas Pydantic para validación de entrada/salida.
 """
-from pydantic import BaseModel, field_validator
-from typing import Optional, List
 from datetime import datetime
 from enum import Enum
+from typing import List, Optional
+
+from pydantic import BaseModel, field_validator
 
 
 class MetodoPago(str, Enum):
@@ -14,7 +15,20 @@ class MetodoPago(str, Enum):
     tarjeta   = "Tarjeta"
 
 
-# ─────────────── SUCURSALES ───────────────
+# ── Validadores reutilizables ────────────────────────────────────────
+def validate_non_empty_string(v: str, field_name: str = "campo") -> str:
+    """Valida que un string no esté vacío después de strip."""
+    if not v or not v.strip():
+        raise ValueError(f"El {field_name} no puede estar vacío")
+    return v.strip()
+
+
+def validate_positive_number(v: float, field_name: str = "valor") -> float:
+    """Valida que un número sea positivo."""
+    if v <= 0:
+        raise ValueError(f"El {field_name} debe ser mayor a 0")
+    return v
+
 
 class SucursalCreate(BaseModel):
     nombre: str
@@ -22,9 +36,7 @@ class SucursalCreate(BaseModel):
     @field_validator("nombre")
     @classmethod
     def nombre_no_vacio(cls, v):
-        if not v.strip():
-            raise ValueError("El nombre de la sucursal no puede estar vacío")
-        return v.strip()
+        return validate_non_empty_string(v, "nombre de la sucursal")
 
 
 class SucursalOut(BaseModel):
@@ -34,8 +46,6 @@ class SucursalOut(BaseModel):
 
     model_config = {"from_attributes": True}
 
-
-# ─────────────── PRODUCTOS ───────────────
 
 class ProductoCreate(BaseModel):
     nombre:      str
@@ -47,30 +57,22 @@ class ProductoCreate(BaseModel):
     @field_validator("precio")
     @classmethod
     def precio_positivo(cls, v):
-        if v <= 0:
-            raise ValueError("El precio debe ser mayor a 0")
-        return v
+        return validate_positive_number(v, "precio")
 
     @field_validator("nombre")
     @classmethod
     def nombre_no_vacio(cls, v):
-        if not v.strip():
-            raise ValueError("El nombre no puede estar vacío")
-        return v.strip()
+        return validate_non_empty_string(v, "nombre")
 
     @field_validator("categoria")
     @classmethod
     def categoria_no_vacia(cls, v):
-        if not v.strip():
-            raise ValueError("La categoría es obligatoria")
-        return v.strip()
+        return validate_non_empty_string(v, "categoría")
 
     @field_validator("sucursal_id")
     @classmethod
     def sucursal_requerida(cls, v):
-        if not v or not v.strip():
-            raise ValueError("La sucursal es obligatoria")
-        return v.strip()
+        return validate_non_empty_string(v, "sucursal")
 
 
 class ProductoOut(BaseModel):
@@ -92,16 +94,12 @@ class CategoriaCreate(BaseModel):
     @field_validator("nombre")
     @classmethod
     def nombre_no_vacio(cls, v):
-        if not v.strip():
-            raise ValueError("El nombre de la categoría no puede estar vacío")
-        return v.strip()
+        return validate_non_empty_string(v, "nombre de la categoría")
 
     @field_validator("sucursal_id")
     @classmethod
     def sucursal_requerida(cls, v):
-        if not v or not v.strip():
-            raise ValueError("La sucursal es obligatoria")
-        return v.strip()
+        return validate_non_empty_string(v, "sucursal")
 
 
 class CategoriaOut(BaseModel):
@@ -113,12 +111,19 @@ class CategoriaOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ─────────────── VENTAS ───────────────
+class CategoriaUpdate(BaseModel):
+    nombre: str
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_no_vacio(cls, v):
+        return validate_non_empty_string(v, "nombre")
+
 
 class VentaCreate(BaseModel):
     producto_id:     str
-    producto_nombre: Optional[str]   = None  # requerido si producto_id empieza con "__"
-    precio_unitario: Optional[float] = None  # requerido si producto_id empieza con "__"
+    producto_nombre: Optional[str]   = None
+    precio_unitario: Optional[float] = None
     cantidad:        int
     metodo_pago:     MetodoPago
     sucursal_id:     str
@@ -126,16 +131,12 @@ class VentaCreate(BaseModel):
     @field_validator("cantidad")
     @classmethod
     def cantidad_positiva(cls, v):
-        if v <= 0:
-            raise ValueError("La cantidad debe ser al menos 1")
-        return v
+        return validate_positive_number(v, "cantidad")
 
     @field_validator("sucursal_id")
     @classmethod
     def sucursal_requerida(cls, v):
-        if not v or not v.strip():
-            raise ValueError("La sucursal es obligatoria")
-        return v.strip()
+        return validate_non_empty_string(v, "sucursal")
 
 
 class VentaOut(BaseModel):
@@ -147,11 +148,27 @@ class VentaOut(BaseModel):
     precio_unitario: float
     total:           float
     metodo_pago:     str
+    anulada:         bool = False
 
     model_config = {"from_attributes": True}
 
 
-# ─────────────── REPORTES ───────────────
+class VentaListOut(BaseModel):
+    id:              str
+    fecha:           str
+    producto_nombre: str
+    cantidad:        int
+    precio_unitario: float
+    total:           float
+    metodo_pago:     str
+    anulada:         bool = False
+
+    model_config = {"from_attributes": True}
+
+
+class VentaUpdate(BaseModel):
+    metodo_pago: MetodoPago
+
 
 class ReporteProducto(BaseModel):
     producto_nombre: str
@@ -174,8 +191,6 @@ class ReporteDia(BaseModel):
     resumen_caja:  ResumenCaja
 
 
-# ─────────────── AUTH ───────────────
-
 class RegisterRequest(BaseModel):
     email:    str
     password: str
@@ -191,9 +206,11 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type:   str = "bearer"
     nombre:       str = ""
+    es_admin:     bool = False
 
 
 class RegisterResponse(BaseModel):
     access_token: str
     token_type:   str = "bearer"
     nombre:       str
+    es_admin:     bool = False

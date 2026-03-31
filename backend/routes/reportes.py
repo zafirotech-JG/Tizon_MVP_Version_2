@@ -9,9 +9,9 @@ from fastapi import APIRouter, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from backend.database import get_db
-from backend.models import ReporteDia, ReporteProducto, ResumenCaja
-from backend.models_db import Venta, Sucursal
+from backend.db.session import get_db
+from backend.models.orm import Sucursal, Venta
+from backend.schemas import ReporteDia, ReporteProducto, ResumenCaja
 from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/reportes", tags=["Reportes"])
@@ -53,6 +53,7 @@ def reporte_del_dia(
             Venta.tenant_id   == user["tenant_id"],
             Venta.sucursal_id == sucursal_id,
             func.date(Venta.fecha) == fecha,
+            Venta.anulada == False,
         )
         .all()
     )

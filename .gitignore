@@ -4,3 +4,23 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+
+# Database files
+*.db
+*.db-journal
+data/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db

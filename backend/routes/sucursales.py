@@ -6,9 +6,9 @@ Productos, categorías y ventas están aislados por sucursal.
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 
-from backend.database import get_db
-from backend.models import SucursalCreate, SucursalOut
-from backend.models_db import Sucursal
+from backend.db.session import get_db
+from backend.models.orm import Sucursal
+from backend.schemas import SucursalCreate, SucursalOut
 from backend.auth import get_current_user
 
 router = APIRouter(prefix="/api/sucursales", tags=["Sucursales"])
