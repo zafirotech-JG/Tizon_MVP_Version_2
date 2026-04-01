@@ -151,9 +151,9 @@ def editar_venta(
     user: dict    = Depends(get_current_user),
     db:   Session = Depends(get_db),
 ):
-    """Edita el método de pago de una venta. Requiere PIN de admin."""
+    """Edita cantidad y/o método de pago de una venta. Requiere PIN de admin."""
     if pin != ADMIN_PIN:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="PIN incorrecto")
+        raise HTTPException(status_code=403, detail="PIN incorrecto")
 
     venta = db.query(Venta).filter(
         Venta.id        == venta_id,
@@ -164,7 +164,13 @@ def editar_venta(
     if venta.anulada:
         raise HTTPException(status_code=400, detail="No se puede editar una venta anulada")
 
-    venta.metodo_pago = data.metodo_pago.value
+    if data.metodo_pago is not None:
+        venta.metodo_pago = data.metodo_pago.value
+
+    if data.cantidad is not None:
+        venta.cantidad = data.cantidad
+        venta.total    = round(venta.precio_unitario * data.cantidad, 2)
+
     db.commit()
     db.refresh(venta)
 
@@ -190,7 +196,7 @@ def anular_venta(
 ):
     """Anula (soft delete) una venta. Requiere PIN de administrador."""
     if pin != ADMIN_PIN:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="PIN incorrecto")
+        raise HTTPException(status_code=403, detail="PIN incorrecto")
 
     venta = db.query(Venta).filter(
         Venta.id        == venta_id,

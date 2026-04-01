@@ -167,7 +167,15 @@ class VentaListOut(BaseModel):
 
 
 class VentaUpdate(BaseModel):
-    metodo_pago: MetodoPago
+    metodo_pago: Optional[MetodoPago] = None
+    cantidad:    Optional[int]        = None
+
+    @field_validator("cantidad")
+    @classmethod
+    def cantidad_positiva(cls, v):
+        if v is not None and v < 1:
+            raise ValueError("La cantidad debe ser al menos 1")
+        return v
 
 
 class ReporteProducto(BaseModel):

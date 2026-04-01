@@ -16,61 +16,61 @@ export function iniciarTutorial(forzar = false) {
     const driverObj = window.driver.js.driver;
 
     const tourAdmin = [
-        { popover: { title: "Bienvenido a Tizón V1 🔥", description: "Vamos a dar un recorrido rápido por el sistema.", side: "bottom", align: "start" } },
-        { element: ".sucursal-selector", popover: { title: "Sucursales", description: "Como administrador, aquí puedes crear nuevas sucursales o editar las existentes.", side: "right", align: "start" } },
+        { popover: { title: "Bienvenido a Tizón", description: "Te guiaremos paso a paso por las funciones principales del sistema. Solo tomará un momento.", side: "bottom", align: "start" } },
+        { element: ".sucursal-selector", popover: { title: "Tus Sucursales", description: "Administra tus puntos de venta desde aquí. Puedes crear nuevas sucursales, renombrarlas o eliminarlas según necesites.", side: "right", align: "start" } },
         {
             element: "[data-seccion='inventario']", 
-            popover: { title: "Inventario & Menú", description: "Aquí puedes dar de alta nuevos productos y su precio.", side: "right", align: "start" },
+            popover: { title: "Inventario y Menú", description: "Registra tus productos con nombre, precio y categoría. Mantén tu catálogo siempre actualizado.", side: "right", align: "start" },
             onHighlightStarted: () => mostrarSeccion("inventario")
         },
         {
             element: "#seccion-categorias-admin", 
-            popover: { title: "Gestión de Categorías", description: "Solo los administradores pueden editar o eliminar las categorías en el sistema para mantener consistencia.", side: "bottom", align: "center" },
+            popover: { title: "Categorías", description: "Organiza tus productos en categorías para que el equipo de caja los encuentre más rápido. Solo los administradores pueden modificarlas.", side: "bottom", align: "center" },
             onHighlightStarted: () => mostrarSeccion("inventario")
         },
         {
             element: "[data-seccion='dashboard']", 
-            popover: { title: "Dashboard & Reportes", description: "Visualiza el desempeño de tus sucursales y cuadre de caja del día.", side: "right", align: "start" },
+            popover: { title: "Reportes y Cierre de Caja", description: "Consulta las ventas del día, el desglose por método de pago y los productos más vendidos de cada sucursal.", side: "right", align: "start" },
             onHighlightStarted: () => mostrarSeccion("dashboard")
         },
         {
             element: "#seccion-historial-ventas", 
-            popover: { title: "Historial de Venta", description: "Lleva control de todos los pedidos. Si hubo un error, aquí puedes anularlos usando tu código de seguridad (PIN).", side: "top", align: "center" },
+            popover: { title: "Historial de Transacciones", description: "Revisa cada venta registrada. Si hay un error, puedes editar la cantidad o anular la transacción con tu PIN de seguridad.", side: "top", align: "center" },
             onHighlightStarted: () => mostrarSeccion("dashboard")
         },
         {
             element: "[data-seccion='pos']", 
-            popover: { title: "Punto de Venta", description: "Tu caja registradora fluida de 2 paneles. Haz clic en las categorías (superior) para filtrar tus menús.", side: "right", align: "start" },
+            popover: { title: "Punto de Venta", description: "Tu caja registradora. Selecciona productos del catálogo, ajusta cantidades y procesa el cobro de forma rápida.", side: "right", align: "start" },
             onHighlightStarted: () => mostrarSeccion("pos")
         },
-        { popover: { title: "¡Todo Listo!", description: "Este tour está disponible cuando lo necesites haciendo clic en el botón de Ayuda '?' abajo a la derecha.", side: "bottom", align: "center" } }
+        { popover: { title: "Listo para empezar", description: "Puedes volver a ver este recorrido en cualquier momento con el botón de ayuda (?) en la esquina inferior derecha.", side: "bottom", align: "center" } }
     ];
 
     const tourCajero = [
-        { popover: { title: "Bienvenido a tu Caja Tizón 🔥", description: "Te mostraremos rápidamente cómo operar tu punto de venta." } },
+        { popover: { title: "Bienvenido a tu Caja Tizón", description: "Te mostraremos cómo operar tu punto de venta de forma rápida y sencilla." } },
         {
             element: "[data-seccion='pos']", 
-            popover: { title: "Punto de Venta", description: "Esta es tu pantalla principal. Desde aquí operarás pedidos.", side: "right", align: "start" },
+            popover: { title: "Punto de Venta", description: "Esta es tu pantalla principal. Desde aquí gestionarás todos los pedidos del día.", side: "right", align: "start" },
             onHighlightStarted: () => mostrarSeccion("pos")
         },
         {
             element: ".catalogo-panel", 
-            popover: { title: "Catálogo", description: "Busca productos rápidamente o navega a través de lasTabs superiores para encontrar los diferentes menú.", side: "right", align: "start" },
+            popover: { title: "Catálogo de Productos", description: "Busca productos por nombre o usa las pestañas de categoría en la parte superior para encontrarlos más rápido.", side: "right", align: "start" },
         },
         {
             element: ".panel-carrito", 
-            popover: { title: "Panel de Cobro", description: "Aquí verás el resumen del pedido. Agrega, quita o suma extras al pedido aquí.", side: "left", align: "start" },
+            popover: { title: "Resumen del Pedido", description: "Aquí se muestra el detalle de la orden actual. Puedes ajustar cantidades o eliminar productos antes de cobrar.", side: "left", align: "start" },
         },
         {
             element: "#btn-cobrar", 
-            popover: { title: "Cierre de Orden", description: "Cuando el cliente decida pagar, da clic aquí para elegir el método de pago e ingresa el cálculo automático de cambio.", side: "top", align: "start" },
+            popover: { title: "Procesar Cobro", description: "Cuando el cliente esté listo para pagar, presiona aquí. Selecciona el método de pago y el sistema calcula el cambio automáticamente.", side: "top", align: "start" },
         },
         {
             element: "[data-seccion='inventario']", 
-            popover: { title: "Catálogo General", description: "Consulta listados de precios rápidamente sin realizar ventas.", side: "right", align: "start" },
+            popover: { title: "Consulta de Precios", description: "Revisa el listado completo de productos y precios sin necesidad de crear una venta.", side: "right", align: "start" },
             onHighlightStarted: () => mostrarSeccion("inventario")
         },
-        { popover: { title: "¡Ya puedes comenzar a procesar pedidos!", description: "Vuelve aquí siempre que desees pulsando el icono de duda '?'", side: "bottom", align: "center"} }
+        { popover: { title: "Todo listo", description: "Ya puedes comenzar a procesar pedidos. Recuerda que este recorrido está disponible desde el botón (?) en la esquina inferior derecha.", side: "bottom", align: "center"} }
     ];
 
     const steps = isAdmin() ? tourAdmin : tourCajero;

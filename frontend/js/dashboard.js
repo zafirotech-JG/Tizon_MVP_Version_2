@@ -130,7 +130,7 @@ function renderHistorialVentas(ventas) {
     seccion.style.display = "block";
 
     if (!ventas || ventas.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-cell">Sin transacciones registradas</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="empty-cell">Sin transacciones registradas</td></tr>`;
         return;
     }
 
@@ -143,27 +143,66 @@ function renderHistorialVentas(ventas) {
             <td class="text-center">
                 <span class="metodo-badge metodo-${v.metodo_pago.toLowerCase()}">${v.metodo_pago}</span>
             </td>
-            <td class="text-center">
+            <td class="text-center acciones-venta-cell">
                 ${v.anulada
-                    ? `<span style="color:var(--danger);font-size:0.75rem;font-weight:600">ANULADA</span>`
-                    : `<button class="btn-icon btn-anular-venta" data-id="${v.id}" data-nombre="${v.producto_nombre}" title="Anular venta">
-                           <i class="ph ph-x-circle icon-sm"></i>
-                       </button>`
+                    ? `<span class="badge-anulada">ANULADA</span>`
+                    : `<div class="venta-actions">
+                           <button class="btn-icon btn-editar-venta" data-id="${v.id}" data-nombre="${v.producto_nombre}" data-cantidad="${v.cantidad}" title="Editar cantidad">
+                               <i class="ph ph-pencil-simple icon-sm"></i>
+                           </button>
+                           <button class="btn-icon btn-anular-venta" data-id="${v.id}" data-nombre="${v.producto_nombre}" title="Anular venta">
+                               <i class="ph ph-trash icon-sm"></i>
+                           </button>
+                       </div>`
                 }
             </td>
         </tr>
     `).join("");
 
+    tbody.querySelectorAll(".btn-editar-venta").forEach(btn => {
+        btn.addEventListener("click", () =>
+            editarCantidadVenta(btn.dataset.id, btn.dataset.nombre, parseInt(btn.dataset.cantidad))
+        );
+    });
+
     tbody.querySelectorAll(".btn-anular-venta").forEach(btn => {
         btn.addEventListener("click", () => confirmarAnulacion(btn.dataset.id, btn.dataset.nombre));
     });
+}
 
-    // icons are CSS-based (Phosphor), no re-init needed
+async function editarCantidadVenta(ventaId, productoNombre, cantidadActual) {
+    const nueva = prompt(
+        `Editar cantidad de "${productoNombre}"\n\nCantidad actual: ${cantidadActual}\n\nIngresa la nueva cantidad:`,
+        cantidadActual
+    );
+    if (nueva === null) return;
+
+    const qty = parseInt(nueva);
+    if (isNaN(qty) || qty < 1) {
+        showToast("La cantidad debe ser un número mayor a 0", "warning");
+        return;
+    }
+    if (qty === cantidadActual) return;
+
+    const pin = prompt("Ingresa el PIN de administrador para confirmar:");
+    if (pin === null) return;
+    if (!pin.trim()) {
+        showToast("Debes ingresar el PIN", "warning");
+        return;
+    }
+
+    try {
+        await API.ventas.editar(ventaId, { cantidad: qty }, pin.trim());
+        showToast(`Cantidad actualizada a ${qty}`, "success");
+        await cargarReporte(_fechaActual);
+    } catch (err) {
+        showToast(`Error: ${err.message}`, "error");
+    }
 }
 
 async function confirmarAnulacion(ventaId, productoNombre) {
-    const pin = prompt(`¿Anular la venta de "${productoNombre}"?\n\nIngresa el código PIN de administrador para confirmar:`);
-    if (pin === null) return;  // cancelado
+    const pin = prompt(`¿Anular la venta de "${productoNombre}"?\n\nEsta acción no se puede deshacer.\nIngresa el PIN de administrador para confirmar:`);
+    if (pin === null) return;
 
     if (!pin.trim()) {
         showToast("Debes ingresar el PIN", "warning");
@@ -173,7 +212,6 @@ async function confirmarAnulacion(ventaId, productoNombre) {
     try {
         await API.ventas.anular(ventaId, pin.trim());
         showToast("Venta anulada correctamente", "success");
-        // Recargar el reporte completo
         await cargarReporte(_fechaActual);
     } catch (err) {
         showToast(`Error: ${err.message}`, "error");
