@@ -39,10 +39,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Orígenes permitidos para CORS (combina .env y Railway)
+allowed_origins = cors_origins()
+if "https://tizonmvpversion2-production.up.railway.app" not in allowed_origins:
+    allowed_origins.append("https://tizonmvpversion2-production.up.railway.app")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins(),
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
