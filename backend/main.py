@@ -39,29 +39,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Configuración CORS para Railway y desarrollo local
-allowed_origins = cors_origins()
-
-# Si es wildcard (*), reemplazar con orígenes específicos
-if "*" in allowed_origins:
-    allowed_origins = [
-        "https://tizonmvpversion2-production.up.railway.app", # <-- ¡SIN la barra (/) al final!
-    "http://localhost:8000",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500"
-    ]
-else:
-    # Asegurar que Railway esté en la lista
-    if "https://tizonmvpversion2-production.up.railway.app" not in allowed_origins:
-        allowed_origins.append("https://tizonmvpversion2-production.up.railway.app")
-
+# ¡CORS CONFIGURADO DIRECTAMENTE (A PRUEBA DE FALLOS)!
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=[
+        "https://tizonmvpversion2-production.up.railway.app",
+        "http://localhost:8000",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
 )
 
 app.include_router(auth.router)
