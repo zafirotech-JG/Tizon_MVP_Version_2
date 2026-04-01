@@ -5,7 +5,7 @@
 const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const BASE_URL = isLocal
     ? ""
-    : "https://tizonmvpversion2-production.up.railway.app/";
+    : "https://tizonmvpversion2-production.up.railway.app";
 
 async function request(method, path, body = null) {
     const options = {
