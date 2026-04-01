@@ -45,11 +45,10 @@ allowed_origins = cors_origins()
 # Si es wildcard (*), reemplazar con orígenes específicos
 if "*" in allowed_origins:
     allowed_origins = [
-        "https://tizonmvpversion2-production.up.railway.app",
-        "http://localhost:8000",
-        "http://localhost:5500",
-        "http://127.0.0.1:8000",
-        "http://127.0.0.1:5500",
+        "https://tizonmvpversion2-production.up.railway.app", # <-- ¡SIN la barra (/) al final!
+    "http://localhost:8000",
+    "http://localhost:5500",
+    "http://127.0.0.1:5500"
     ]
 else:
     # Asegurar que Railway esté en la lista
