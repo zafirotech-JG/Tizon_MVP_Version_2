@@ -196,6 +196,18 @@ function renderChartProductos(productos) {
 
     canvas.style.display = "block";
 
+    // Paleta de colores cálidos para el gráfico
+    const colors = [
+        'rgba(224, 123, 42, 0.9)',   // Naranja principal
+        'rgba(240, 144, 80, 0.9)',   // Naranja claro
+        'rgba(240, 192, 64, 0.9)',   // Amarillo cálido
+        'rgba(62, 207, 142, 0.9)',   // Verde éxito
+        'rgba(224, 80, 80, 0.9)',    // Rojo
+        'rgba(168, 152, 128, 0.9)',  // Beige
+        'rgba(107, 90, 72, 0.9)',    // Marrón
+        'rgba(42, 168, 224, 0.9)',   // Azul
+    ];
+
     _chartInstance = new Chart(canvas, {
         type: "bar",
         data: {
@@ -203,32 +215,54 @@ function renderChartProductos(productos) {
             datasets: [{
                 label: "Unidades vendidas",
                 data: top.map(p => p.cantidad_total),
-                backgroundColor: "rgba(224, 123, 42, 0.75)",
-                borderColor: "rgba(224, 123, 42, 1)",
-                borderWidth: 1,
-                borderRadius: 5,
+                backgroundColor: colors.slice(0, top.length),
+                borderColor: colors.slice(0, top.length).map(c => c.replace('0.9', '1')),
+                borderWidth: 2,
+                borderRadius: 8,
+                barThickness: 32,
             }]
         },
         options: {
             indexAxis: "y",
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    backgroundColor: 'rgba(26, 22, 19, 0.95)',
+                    titleColor: '#f0ebe4',
+                    bodyColor: '#a89880',
+                    borderColor: '#e07b2a',
+                    borderWidth: 1,
+                    padding: 12,
+                    displayColors: true,
                     callbacks: {
-                        label: ctx => ` ${ctx.parsed.x} unidades`,
+                        label: ctx => ` ${ctx.parsed.x} unidades vendidas`,
+                        title: ctx => `🔥 ${ctx[0].label}`
                     }
                 }
             },
             scales: {
                 x: {
                     beginAtZero: true,
-                    ticks: { color: "#aaa", stepSize: 1 },
-                    grid: { color: "rgba(255,255,255,0.07)" },
+                    ticks: { 
+                        color: "#a89880", 
+                        stepSize: 1,
+                        font: { size: 12, weight: '600' }
+                    },
+                    grid: { 
+                        color: "rgba(58, 48, 40, 0.5)",
+                        drawBorder: false
+                    },
+                    border: { display: false }
                 },
                 y: {
-                    ticks: { color: "#ccc" },
+                    ticks: { 
+                        color: "#f0ebe4",
+                        font: { size: 13, weight: '600' }
+                    },
                     grid: { display: false },
+                    border: { display: false }
                 }
             }
         }

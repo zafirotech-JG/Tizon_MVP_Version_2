@@ -1,0 +1,274 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Dashboard Improvements - Better Layout & Visual Hierarchy
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Mejorar el header del dashboard */
+.dashboard-filter {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dashboard-filter input[type="date"] {
+    min-width: 160px;
+    background: var(--bg-input);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-family: var(--font);
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.dashboard-filter input[type="date"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+/* Mejorar las tarjetas de métricas */
+.resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.metric-card {
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface) 100%);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent-gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.metric-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(224, 123, 42, 0.15);
+}
+
+.metric-card:hover::before {
+    opacity: 1;
+}
+
+.metric-card.highlight {
+    background: linear-gradient(135deg, rgba(224, 123, 42, 0.1) 0%, var(--bg-card) 100%);
+    border-color: var(--accent);
+}
+
+.metric-card.highlight::before {
+    opacity: 1;
+    height: 4px;
+}
+
+.metric-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+.metric-card.highlight .metric-value {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Mejorar la sección de gráfico */
+.section-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-label::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    background: var(--accent-gradient);
+    border-radius: 2px;
+}
+
+/* Mejorar el contenedor del gráfico */
+#chart-productos-mas-vendidos {
+    min-height: 320px !important;
+    max-height: 400px !important;
+}
+
+/* Mejorar las tablas */
+.table-wrap {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-top: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: linear-gradient(135deg, var(--bg-surface) 0%, var(--bg-card) 100%);
+    border-bottom: 2px solid var(--border);
+}
+
+th {
+    padding: 16px;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+tbody tr {
+    transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+    background: var(--bg-card-hover);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.empty-cell {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 32px 16px;
+}
+
+/* Badges de método de pago mejorados */
+.metodo-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.metodo-efectivo {
+    background: rgba(62, 207, 142, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(62, 207, 142, 0.3);
+}
+
+.metodo-nequi {
+    background: rgba(240, 192, 64, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(240, 192, 64, 0.3);
+}
+
+.metodo-daviplata {
+    background: rgba(224, 123, 42, 0.15);
+    color: var(--accent);
+    border: 1px solid rgba(224, 123, 42, 0.3);
+}
+
+.metodo-tarjeta {
+    background: rgba(42, 168, 224, 0.15);
+    color: #2aa8e0;
+    border: 1px solid rgba(42, 168, 224, 0.3);
+}
+
+/* Venta anulada */
+.venta-anulada {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+/* Botón de anular mejorado */
+.btn-anular-venta {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-muted);
+}
+
+.btn-anular-venta:hover {
+    background: var(--danger-dim);
+    border-color: var(--danger);
+    color: var(--danger);
+    transform: scale(1.05);
+}
+
+/* Responsive mejoras */
+@media (max-width: 768px) {
+    .resumen-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-card {
+        padding: 16px;
+    }
+    
+    .metric-value {
+        font-size: 1.5rem;
+    }
+    
+    #chart-productos-mas-vendidos {
+        min-height: 280px !important;
+    }
+}
