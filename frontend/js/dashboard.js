@@ -82,16 +82,25 @@ async function cargarReporte(fecha) {
     }
 }
 
+function filterProductos(productos) {
+    if (!productos) return [];
+    return productos.filter(p =>
+        p.producto_nombre.toLowerCase() !== "domicilio"
+    );
+}
+
 function renderTablaProductos(productos) {
     const tbody = document.getElementById("tabla-reporte-body");
     if (!tbody) return;
 
-    if (!productos || productos.length === 0) {
+    const filtered = filterProductos(productos);
+
+    if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" class="empty-cell">Sin ventas para esta fecha</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = productos.map(p => `
+    tbody.innerHTML = filtered.map(p => `
         <tr>
             <td>${p.producto_nombre}</td>
             <td class="text-center">${p.cantidad_total}</td>
@@ -180,7 +189,9 @@ function renderChartProductos(productos) {
         _chartInstance = null;
     }
 
-    if (!productos || productos.length === 0) {
+    const filtered = filterProductos(productos);
+
+    if (filtered.length === 0) {
         canvas.style.display = "none";
         const emptyMsg = document.getElementById("chart-empty-msg");
         if (emptyMsg) { emptyMsg.style.display = "block"; }
@@ -190,79 +201,78 @@ function renderChartProductos(productos) {
     const emptyMsg = document.getElementById("chart-empty-msg");
     if (emptyMsg) emptyMsg.style.display = "none";
 
-    const top = [...productos]
+    const top = [...filtered]
         .sort((a, b) => b.cantidad_total - a.cantidad_total)
         .slice(0, 8);
 
     canvas.style.display = "block";
 
-    // Paleta de colores cálidos para el gráfico
     const colors = [
-        'rgba(224, 123, 42, 0.9)',   // Naranja principal
-        'rgba(240, 144, 80, 0.9)',   // Naranja claro
-        'rgba(240, 192, 64, 0.9)',   // Amarillo cálido
-        'rgba(62, 207, 142, 0.9)',   // Verde éxito
-        'rgba(224, 80, 80, 0.9)',    // Rojo
-        'rgba(168, 152, 128, 0.9)',  // Beige
-        'rgba(107, 90, 72, 0.9)',    // Marrón
-        'rgba(42, 168, 224, 0.9)',   // Azul
+        'rgba(224, 123, 42, 0.85)',
+        'rgba(240, 160, 80, 0.85)',
+        'rgba(240, 196, 72, 0.85)',
+        'rgba(62, 207, 142, 0.85)',
+        'rgba(200, 90, 90, 0.85)',
+        'rgba(160, 140, 120, 0.85)',
+        'rgba(120, 100, 80, 0.85)',
+        'rgba(80, 160, 210, 0.85)',
     ];
 
+    const borderColors = colors.map(c => c.replace('0.85', '1'));
+
     _chartInstance = new Chart(canvas, {
-        type: "bar",
+        type: "doughnut",
         data: {
             labels: top.map(p => p.producto_nombre),
             datasets: [{
-                label: "Unidades vendidas",
                 data: top.map(p => p.cantidad_total),
                 backgroundColor: colors.slice(0, top.length),
-                borderColor: colors.slice(0, top.length).map(c => c.replace('0.9', '1')),
+                borderColor: borderColors.slice(0, top.length),
                 borderWidth: 2,
-                borderRadius: 8,
-                barThickness: 32,
+                hoverOffset: 8,
+                spacing: 3,
             }]
         },
         options: {
-            indexAxis: "y",
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '55%',
+            layout: {
+                padding: { top: 8, bottom: 8 }
+            },
             plugins: {
-                legend: { display: false },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        color: '#c8b8a4',
+                        font: { family: "'Inter', sans-serif", size: 12.5, weight: '500' },
+                        padding: 16,
+                        usePointStyle: true,
+                        pointStyle: 'rectRounded',
+                        boxWidth: 10,
+                        boxHeight: 10,
+                    }
+                },
                 tooltip: {
                     backgroundColor: 'rgba(26, 22, 19, 0.95)',
+                    titleFont: { family: "'Inter', sans-serif", size: 13, weight: '600' },
+                    bodyFont: { family: "'Inter', sans-serif", size: 12, weight: '400' },
                     titleColor: '#f0ebe4',
-                    bodyColor: '#a89880',
-                    borderColor: '#e07b2a',
+                    bodyColor: '#c8b8a4',
+                    borderColor: 'rgba(224, 123, 42, 0.4)',
                     borderWidth: 1,
-                    padding: 12,
+                    padding: 14,
+                    cornerRadius: 10,
                     displayColors: true,
+                    boxPadding: 6,
                     callbacks: {
-                        label: ctx => ` ${ctx.parsed.x} unidades vendidas`,
-                        title: ctx => `🔥 ${ctx[0].label}`
+                        label: ctx => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                            return ` ${ctx.parsed} uds  ·  ${pct}%`;
+                        }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    ticks: { 
-                        color: "#a89880", 
-                        stepSize: 1,
-                        font: { size: 12, weight: '600' }
-                    },
-                    grid: { 
-                        color: "rgba(58, 48, 40, 0.5)",
-                        drawBorder: false
-                    },
-                    border: { display: false }
-                },
-                y: {
-                    ticks: { 
-                        color: "#f0ebe4",
-                        font: { size: 13, weight: '600' }
-                    },
-                    grid: { display: false },
-                    border: { display: false }
                 }
             }
         }
