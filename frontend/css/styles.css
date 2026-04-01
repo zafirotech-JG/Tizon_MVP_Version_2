@@ -1770,42 +1770,34 @@ tr:hover td {
 
 
 /* ════════════════════════════════════════════════════════════════════════
-   LUCIDE ICONS
+   ICONS (Phosphor Icons — CSS-based)
    ════════════════════════════════════════════════════════════════════════ */
-.lucide {
-  display: inline-block;
-  vertical-align: middle;
-  stroke-width: 2;
-  stroke: currentColor;
-  fill: none;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .icon-sm {
-  width: 18px;
-  height: 18px;
-  margin-right: 4px; /* small gap for text next to it */
-  vertical-align: text-bottom;
+  font-size: 1.1rem;
+  margin-right: 4px;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
 }
 
 .icon-md {
-  width: 24px;
-  height: 24px;
+  font-size: 1.35rem;
   margin-right: 6px;
-  vertical-align: bottom;
+  vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
 }
 
 .icon-lg {
-  width: 32px;
-  height: 32px;
+  font-size: 1.8rem;
+  display: inline-flex;
+  align-items: center;
 }
 
-/* Fix specific spacing */
-.nav-item .icon .lucide {
+.nav-item .icon .ph {
   margin-right: 0;
 }
-.btn-icon .lucide {
+.btn-icon .ph {
   margin-right: 0;
 }
 

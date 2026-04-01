@@ -213,11 +213,10 @@ function renderCarrito() {
     if (carrito.length === 0) {
         container.innerHTML = `
             <div class="carrito-vacio">
-                <span class="carrito-vacio-icon"><i data-lucide="shopping-cart" style="width: 48px; height: 48px"></i></span>
+                <span class="carrito-vacio-icon"><i class="ph ph-shopping-cart" style="font-size: 48px"></i></span>
                 <p>Pedido vacío</p>
                 <span>Selecciona productos del catálogo</span>
             </div>`;
-        if (window.lucide) window.lucide.createIcons();
         return;
     }
 
@@ -228,7 +227,7 @@ function renderCarrito() {
                 <div class="carrito-item-precio">${formatCOP(item.precio)} c/u</div>
             </div>
             <div class="cart-qty">
-                <button type="button" class="${item.cantidad === 1 ? 'btn-remove' : ''}" data-action="minus" data-id="${item.id}">${item.cantidad === 1 ? '<i data-lucide="trash-2" class="icon-sm"></i>' : '−'}</button>
+                <button type="button" class="${item.cantidad === 1 ? 'btn-remove' : ''}" data-action="minus" data-id="${item.id}">${item.cantidad === 1 ? '<i class="ph ph-trash icon-sm"></i>' : '−'}</button>
                 <span class="cart-qty-val">${item.cantidad}</span>
                 <button type="button" data-action="plus" data-id="${item.id}">+</button>
             </div>
@@ -242,7 +241,6 @@ function renderCarrito() {
         });
     });
 
-    if (window.lucide) window.lucide.createIcons();
     actualizarBadge();
 }
 
@@ -305,8 +303,7 @@ function mostrarPagoInline() {
     document.getElementById("pago-recibido-inline").value = "";
     document.getElementById("pago-cambio-wrap-inline").style.display = "none";
     document.getElementById("btn-registrar-inline").disabled = true;
-    if (window.lucide) window.lucide.createIcons();
-}
+    }
 
 function ocultarPagoInline() {
     const pago = document.getElementById("pago-inline");
@@ -443,8 +440,7 @@ async function registrarVenta() {
 
     if (btnRegistrar) {
         btnRegistrar.disabled = false;
-        btnRegistrar.innerHTML = '<i data-lucide="check-circle" class="icon-sm"></i> Registrar Venta';
-        if (window.lucide) window.lucide.createIcons();
+        btnRegistrar.innerHTML = '<i class="ph ph-check-circle icon-sm"></i> Registrar Venta';
     }
 }
 

@@ -78,9 +78,9 @@ function renderTabla(productos) {
                 <button class="btn-icon btn-editar" data-id="${p.id}"
                     data-nombre="${p.nombre}" data-precio="${p.precio}"
                     data-insumos="${p.insumos || ""}" data-categoria="${p.categoria || "General"}">
-                    <i data-lucide="pencil" class="icon-sm"></i>
+                    <i class="ph ph-pencil-simple icon-sm"></i>
                 </button>
-                <button class="btn-icon btn-eliminar" data-id="${p.id}"><i data-lucide="trash-2" class="icon-sm"></i></button>
+                <button class="btn-icon btn-eliminar" data-id="${p.id}"><i class="ph ph-trash icon-sm"></i></button>
             </td>
         </tr>
     `).join("");
@@ -92,7 +92,7 @@ function renderTabla(productos) {
         btn.addEventListener("click", () => eliminarProducto(btn.dataset.id));
     });
 
-    if (window.lucide) window.lucide.createIcons();
+    // icons are CSS-based (Phosphor), no re-init needed
 }
 
 function abrirModal(titulo = "Nuevo Producto") {

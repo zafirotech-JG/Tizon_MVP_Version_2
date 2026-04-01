@@ -126,13 +126,15 @@ async function handleLogin() {
 
 // ── Registro ─────────────────────────────────────────────────────────────
 async function handleRegister() {
-    const email    = document.getElementById("reg-email")?.value.trim();
-    const password = document.getElementById("reg-password")?.value;
-    const nombre   = document.getElementById("reg-nombre")?.value.trim();
-    const btn      = document.getElementById("btn-register");
+    const email       = document.getElementById("reg-email")?.value.trim();
+    const password    = document.getElementById("reg-password")?.value;
+    const passConfirm = document.getElementById("reg-password-confirm")?.value;
+    const nombre      = document.getElementById("reg-nombre")?.value.trim();
+    const terms       = document.getElementById("reg-terms")?.checked;
+    const btn         = document.getElementById("btn-register");
 
     if (!email || !password || !nombre) {
-        showToast("Completa todos los campos", "warning");
+        showToast("Completa los campos obligatorios (*)", "warning");
         return;
     }
     if (password.length < 6) {
@@ -141,6 +143,14 @@ async function handleRegister() {
     }
     if (password.length > 72) {
         showToast("La contraseña no puede superar 72 caracteres", "warning");
+        return;
+    }
+    if (passConfirm !== undefined && password !== passConfirm) {
+        showToast("Las contraseñas no coinciden", "warning");
+        return;
+    }
+    if (terms !== undefined && !terms) {
+        showToast("Debes aceptar los términos y condiciones", "warning");
         return;
     }
 

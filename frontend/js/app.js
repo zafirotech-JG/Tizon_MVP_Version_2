@@ -207,8 +207,8 @@ function renderListaSucursales() {
         <div class="sucursal-admin-item">
             <span class="sucursal-admin-nombre">${s.nombre}</span>
             <div class="sucursal-admin-actions">
-                <button class="btn-icon" data-editar-id="${s.id}" data-editar-nombre="${s.nombre}" title="Renombrar"><i data-lucide="pencil" class="icon-sm"></i></button>
-                <button class="btn-icon" data-eliminar-id="${s.id}" data-eliminar-nombre="${s.nombre}" title="Eliminar"><i data-lucide="trash-2" class="icon-sm"></i></button>
+                <button class="btn-icon" data-editar-id="${s.id}" data-editar-nombre="${s.nombre}" title="Renombrar"><i class="ph ph-pencil-simple icon-sm"></i></button>
+                <button class="btn-icon" data-eliminar-id="${s.id}" data-eliminar-nombre="${s.nombre}" title="Eliminar"><i class="ph ph-trash icon-sm"></i></button>
             </div>
         </div>
     `).join("");

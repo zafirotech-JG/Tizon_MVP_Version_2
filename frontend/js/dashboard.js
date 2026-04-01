@@ -138,7 +138,7 @@ function renderHistorialVentas(ventas) {
                 ${v.anulada
                     ? `<span style="color:var(--danger);font-size:0.75rem;font-weight:600">ANULADA</span>`
                     : `<button class="btn-icon btn-anular-venta" data-id="${v.id}" data-nombre="${v.producto_nombre}" title="Anular venta">
-                           <i data-lucide="x-circle" class="icon-sm"></i>
+                           <i class="ph ph-x-circle icon-sm"></i>
                        </button>`
                 }
             </td>
@@ -149,7 +149,7 @@ function renderHistorialVentas(ventas) {
         btn.addEventListener("click", () => confirmarAnulacion(btn.dataset.id, btn.dataset.nombre));
     });
 
-    if (window.lucide) window.lucide.createIcons();
+    // icons are CSS-based (Phosphor), no re-init needed
 }
 
 async function confirmarAnulacion(ventaId, productoNombre) {

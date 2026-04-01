@@ -53,10 +53,10 @@ function renderCategorias(categorias) {
             <span class="cat-nombre">${cat.nombre}</span>
             <div class="cat-acciones">
                 <button class="btn-icon btn-cat-editar" data-id="${cat.id}" data-nombre="${cat.nombre}" title="Editar nombre">
-                    <i data-lucide="pencil" class="icon-sm"></i>
+                    <i class="ph ph-pencil-simple icon-sm"></i>
                 </button>
                 <button class="btn-icon btn-cat-eliminar btn-eliminar" data-id="${cat.id}" data-nombre="${cat.nombre}" title="Eliminar categoría">
-                    <i data-lucide="trash-2" class="icon-sm"></i>
+                    <i class="ph ph-trash icon-sm"></i>
                 </button>
             </div>
         </div>
@@ -69,7 +69,7 @@ function renderCategorias(categorias) {
         btn.addEventListener("click", () => eliminarCategoria(btn.dataset.id, btn.dataset.nombre));
     });
 
-    if (window.lucide) window.lucide.createIcons();
+    // icons are CSS-based (Phosphor), no re-init needed
 }
 
 async function editarCategoria(id, nombreActual) {
