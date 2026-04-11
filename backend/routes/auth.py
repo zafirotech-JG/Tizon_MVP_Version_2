@@ -1,7 +1,7 @@
 """
 routes/auth.py — Login y registro de tenants (JWT)
 """
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 @router.post("/login", response_model=TokenResponse)
 def login(data: LoginRequest, db: Session = Depends(get_db)):
-    email = data.username.strip()
+    email = data.email.strip()
     tenant = db.query(Tenant).filter(Tenant.email == email).first()
     if not tenant or not tenant.activo:
         logger.warning(f"Intento de login fallido: usuario no encontrado o inactivo - {email}")
@@ -37,7 +37,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cuenta suspendida. Contacta soporte.",
         )
-    if tenant.fecha_vencimiento and tenant.fecha_vencimiento < datetime.utcnow():
+    if tenant.fecha_vencimiento and tenant.fecha_vencimiento < datetime.now(timezone.utc):
         logger.warning(f"Intento de login con suscripción vencida - {email}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -74,6 +74,8 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         email=email,
         password_hash=hash_password(data.password),
         nombre=nombre,
+        propietario=data.propietario.strip() if data.propietario else None,
+        telefono=data.telefono.strip() if data.telefono else None,
     )
     db.add(tenant)
     db.commit()

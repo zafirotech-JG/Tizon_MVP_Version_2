@@ -1,11 +1,14 @@
 /**
- * api.js — Capa de comunicación con el backend
+ * api.js — Capa de comunicación con el backend Tizón V2
  */
 
 const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 const BASE_URL = isLocal
     ? ""
     : "https://tizonmvpversion2-production.up.railway.app";
+
+/** UTC offset (horas) — se envía al backend en endpoints con fecha */
+const TZ_OFFSET = -(new Date().getTimezoneOffset() / 60);
 
 async function request(method, path, body = null) {
     const options = {
@@ -21,6 +24,10 @@ async function request(method, path, body = null) {
     if (body) options.body = JSON.stringify(body);
 
     const resp = await fetch(`${BASE_URL}${path}`, options);
+
+    // DELETE 204 retorna sin body
+    if (resp.status === 204) return null;
+
     const data = await resp.json().catch(() => null);
 
     if (resp.status === 401) {
@@ -39,22 +46,22 @@ async function request(method, path, body = null) {
 
 export const API = {
     auth: {
-        login: async (username, password) => {
+        login: async (email, password) => {
             const response = await fetch(`${BASE_URL}/api/auth/login`, {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify({ username, password }),
+                body:    JSON.stringify({ email, password }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.detail || "Error en el inicio de sesión");
             return data;
         },
 
-        register: async (email, password, nombre) => {
+        register: async (email, password, nombre, propietario = "", telefono = "") => {
             const response = await fetch(`${BASE_URL}/api/auth/register`, {
                 method:  "POST",
                 headers: { "Content-Type": "application/json" },
-                body:    JSON.stringify({ email, password, nombre }),
+                body:    JSON.stringify({ email, password, nombre, propietario, telefono }),
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.detail || "Error en el registro");
@@ -84,19 +91,29 @@ export const API = {
     },
 
     ventas: {
-        listar:    (sucursal_id, fecha = null) => {
-            const qs = new URLSearchParams({ sucursal_id });
+        listar: (sucursal_id, fecha = null) => {
+            const qs = new URLSearchParams({ sucursal_id, tz_offset: TZ_OFFSET });
             if (fecha) qs.set("fecha", fecha);
             return request("GET", `/api/ventas?${qs}`);
         },
-        registrar: (data)         => request("POST",   "/api/ventas", data),
+        registrar: (data)          => request("POST",   "/api/ventas", data),
         editar:    (id, data, pin) => request("PUT",    `/api/ventas/${id}?pin=${encodeURIComponent(pin)}`, data),
         anular:    (id, pin)       => request("DELETE", `/api/ventas/${id}?pin=${encodeURIComponent(pin)}`),
     },
 
+    ordenes: {
+        crear: (data) => request("POST", "/api/ordenes", data),
+        listar: (sucursal_id, fecha = null) => {
+            const qs = new URLSearchParams({ sucursal_id, tz_offset: TZ_OFFSET });
+            if (fecha) qs.set("fecha", fecha);
+            return request("GET", `/api/ordenes?${qs}`);
+        },
+        anular: (id, pin) => request("DELETE", `/api/ordenes/${id}?pin=${encodeURIComponent(pin)}`),
+    },
+
     reportes: {
         dia: (sucursal_id, fecha = null) => {
-            const qs = new URLSearchParams({ sucursal_id });
+            const qs = new URLSearchParams({ sucursal_id, tz_offset: TZ_OFFSET });
             if (fecha) {
                 const f = fecha instanceof Date
                     ? fecha.toISOString().split("T")[0]
@@ -105,5 +122,10 @@ export const API = {
             }
             return request("GET", `/api/reportes/dia?${qs}`);
         },
+    },
+
+    admin: {
+        tenants:       ()           => request("GET",   "/api/admin/tenants"),
+        patchTenant:   (id, data)   => request("PATCH", `/api/admin/tenants/${id}`, data),
     },
 };

@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class MetodoPago(str, Enum):
@@ -30,6 +30,7 @@ def validate_positive_number(v: float, field_name: str = "valor") -> float:
     return v
 
 
+# ── Sucursales ───────────────────────────────────────────────────────
 class SucursalCreate(BaseModel):
     nombre: str
 
@@ -47,6 +48,7 @@ class SucursalOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── Productos ────────────────────────────────────────────────────────
 class ProductoCreate(BaseModel):
     nombre:      str
     precio:      float
@@ -75,6 +77,29 @@ class ProductoCreate(BaseModel):
         return validate_non_empty_string(v, "sucursal")
 
 
+class ProductoUpdate(BaseModel):
+    """Schema para edición parcial de productos."""
+    nombre:      Optional[str]   = None
+    precio:      Optional[float] = None
+    insumos:     Optional[str]   = None
+    categoria:   Optional[str]   = None
+    sucursal_id: Optional[str]   = None
+
+    @field_validator("precio")
+    @classmethod
+    def precio_positivo(cls, v):
+        if v is not None and v <= 0:
+            raise ValueError("El precio debe ser mayor a 0")
+        return v
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_no_vacio(cls, v):
+        if v is not None:
+            return validate_non_empty_string(v, "nombre")
+        return v
+
+
 class ProductoOut(BaseModel):
     id:          str
     nombre:      str
@@ -87,6 +112,7 @@ class ProductoOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+# ── Categorías ───────────────────────────────────────────────────────
 class CategoriaCreate(BaseModel):
     nombre:      str
     sucursal_id: str
@@ -120,6 +146,7 @@ class CategoriaUpdate(BaseModel):
         return validate_non_empty_string(v, "nombre")
 
 
+# ── Ventas (legacy, mantenidas para compatibilidad) ──────────────────
 class VentaCreate(BaseModel):
     producto_id:     str
     producto_nombre: Optional[str]   = None
@@ -178,6 +205,76 @@ class VentaUpdate(BaseModel):
         return v
 
 
+# ── Órdenes (modelo atómico — reemplaza ventas individuales) ─────────
+class OrdenItemCreate(BaseModel):
+    producto_id:     str
+    producto_nombre: Optional[str]   = None
+    precio_unitario: Optional[float] = None
+    cantidad:        int
+
+    @field_validator("cantidad")
+    @classmethod
+    def cantidad_positiva(cls, v):
+        if v < 1:
+            raise ValueError("La cantidad debe ser al menos 1")
+        return v
+
+
+class OrdenCreate(BaseModel):
+    sucursal_id: str
+    metodo_pago: MetodoPago
+    domicilio:   float = 0
+    items:       List[OrdenItemCreate]
+
+    @field_validator("sucursal_id")
+    @classmethod
+    def sucursal_requerida(cls, v):
+        return validate_non_empty_string(v, "sucursal")
+
+    @field_validator("items")
+    @classmethod
+    def items_no_vacio(cls, v):
+        if not v:
+            raise ValueError("La orden debe tener al menos un producto")
+        return v
+
+
+class OrdenItemOut(BaseModel):
+    id:              str
+    producto_id:     str
+    producto_nombre: str
+    cantidad:        int
+    precio_unitario: float
+    total:           float
+
+    model_config = {"from_attributes": True}
+
+
+class OrdenOut(BaseModel):
+    id:          str
+    fecha:       str
+    metodo_pago: str
+    subtotal:    float
+    domicilio:   float
+    total:       float
+    anulada:     bool = False
+    items:       List[OrdenItemOut] = []
+
+    model_config = {"from_attributes": True}
+
+
+class OrdenListOut(BaseModel):
+    id:          str
+    fecha:       str
+    metodo_pago: str
+    total:       float
+    anulada:     bool = False
+    num_items:   int  = 0
+
+    model_config = {"from_attributes": True}
+
+
+# ── Reportes ─────────────────────────────────────────────────────────
 class ReporteProducto(BaseModel):
     producto_nombre: str
     cantidad_total:  int
@@ -199,14 +296,17 @@ class ReporteDia(BaseModel):
     resumen_caja:  ResumenCaja
 
 
+# ── Auth ─────────────────────────────────────────────────────────────
 class RegisterRequest(BaseModel):
-    email:    str
-    password: str
-    nombre:   str
+    email:       EmailStr
+    password:    str
+    nombre:      str
+    propietario: str = ""
+    telefono:    str = ""
 
 
 class LoginRequest(BaseModel):
-    username: str
+    email:    EmailStr
     password: str
 
 

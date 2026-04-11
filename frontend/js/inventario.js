@@ -6,6 +6,7 @@ import { API }                  from "./api.js";
 import { getSucursalId }        from "./sucursal.js";
 import { showToast, formatCOP } from "./utils.js";
 import { cargarYRenderizarCategorias, getCategorias } from "./categorias.js";
+import { showConfirm } from "./dialog.js";
 
 let productoEditandoId = null;
 
@@ -22,14 +23,12 @@ export function resetInventario() {
 export function initInventario() {
     if (!_inventarioIniciado) {
         bindEventos();
+        window.addEventListener("tizon:categorias-updated", () => {
+            cargarTodo();
+        });
         _inventarioIniciado = true;
     }
     cargarTodo();
-
-    // Recargar categorías si otro módulo las modifica
-    window.addEventListener("tizon:categorias-updated", () => {
-        cargarTodo();
-    });
 }
 
 async function cargarTodo() {
@@ -203,7 +202,14 @@ async function guardarProducto() {
 }
 
 async function eliminarProducto(id) {
-    if (!confirm("¿Eliminar este producto?")) return;
+    const confirmed = await showConfirm({
+        title: "Eliminar producto",
+        body: "¿Estás seguro de que deseas eliminar este producto? Esta acción no se puede deshacer.",
+        confirmText: "Eliminar",
+        type: "danger",
+        icon: "ph-trash",
+    });
+    if (!confirmed) return;
     try {
         await API.productos.eliminar(id);
         showToast("Producto eliminado", "success");

@@ -38,7 +38,7 @@ class PatchTenantBody(BaseModel):
 # ── Login exclusivo para admins ───────────────────────────────────────────
 @router.post("/login", response_model=TokenResponse)
 def admin_login(data: LoginRequest, db: Session = Depends(get_db)):
-    tenant = db.query(Tenant).filter(Tenant.email == data.username.strip()).first()
+    tenant = db.query(Tenant).filter(Tenant.email == data.email.strip()).first()
     if not tenant or not verify_password(data.password, tenant.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

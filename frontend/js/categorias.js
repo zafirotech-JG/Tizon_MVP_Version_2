@@ -7,6 +7,7 @@ import { API } from "./api.js";
 import { getSucursalId } from "./sucursal.js";
 import { showToast } from "./utils.js";
 import { isAdmin } from "./auth.js";
+import { showConfirm, showPrompt } from "./dialog.js";
 
 let categoriasCache = [];
 
@@ -16,11 +17,6 @@ export async function cargarYRenderizarCategorias() {
     const sucursalId = getSucursalId();
     const container  = document.getElementById("seccion-categorias-admin");
     if (!container) return [];
-
-    if (!isAdmin()) {
-        container.style.display = "none";
-        return [];
-    }
 
     container.style.display = "block";
 
@@ -73,14 +69,21 @@ function renderCategorias(categorias) {
 }
 
 async function editarCategoria(id, nombreActual) {
-    const nuevoNombre = prompt(`Nuevo nombre para la categoría "${nombreActual}":`, nombreActual);
+    const nuevoNombre = await showPrompt({
+        title: "Editar categoría",
+        body: `Nuevo nombre para la categoría "${nombreActual}"`,
+        label: "Nombre",
+        placeholder: "Ej: Bebidas, Combos, Entradas...",
+        defaultValue: nombreActual,
+        confirmText: "Guardar",
+        icon: "ph-pencil-simple",
+    });
     if (!nuevoNombre || nuevoNombre.trim() === nombreActual.trim()) return;
 
     try {
         await API.categorias.editar(id, { nombre: nuevoNombre.trim() });
         showToast("Categoría actualizada", "success");
         await cargarYRenderizarCategorias();
-        // Notificar a inventario para que refresque su selector
         window.dispatchEvent(new CustomEvent("tizon:categorias-updated"));
     } catch (err) {
         showToast(`Error: ${err.message}`, "error");
@@ -88,7 +91,14 @@ async function editarCategoria(id, nombreActual) {
 }
 
 async function eliminarCategoria(id, nombre) {
-    if (!confirm(`¿Eliminar la categoría "${nombre}"?\nSolo se puede eliminar si no tiene productos activos.`)) return;
+    const confirmed = await showConfirm({
+        title: "Eliminar categoría",
+        body: `¿Eliminar la categoría "${nombre}"? Solo se puede eliminar si no tiene productos activos.`,
+        confirmText: "Eliminar",
+        type: "danger",
+        icon: "ph-trash",
+    });
+    if (!confirmed) return;
 
     try {
         await API.categorias.eliminar(id);

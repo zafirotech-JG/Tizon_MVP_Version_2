@@ -2,30 +2,16 @@
 Modelos SQLAlchemy — tablas de la base de datos.
 
 Tablas:
-  tenants    → un registro por cliente (negocio)
-  sucursales → locales/puntos de venta de cada tenant
-  productos  → catálogo de productos por sucursal
-  ventas     → transacciones del POS por sucursal
-  categorias → categorías de productos por sucursal
-
-MIGRACIÓN REQUERIDA (base de datos existente):
-  SQLite (dev): elimina tizon.db y reinicia el servidor — se recreará automáticamente.
-  PostgreSQL (Supabase): ejecuta en el SQL Editor:
-
-    CREATE TABLE sucursales (
-        id        TEXT PRIMARY KEY,
-        tenant_id INTEGER NOT NULL REFERENCES tenants(id),
-        nombre    TEXT NOT NULL,
-        activo    BOOLEAN DEFAULT TRUE
-    );
-    ALTER TABLE productos  ADD COLUMN sucursal_id TEXT REFERENCES sucursales(id);
-    ALTER TABLE categorias ADD COLUMN sucursal_id TEXT REFERENCES sucursales(id);
-    ALTER TABLE ventas      ADD COLUMN sucursal_id TEXT REFERENCES sucursales(id);
-    ALTER TABLE tenants ADD COLUMN plan_activo       BOOLEAN DEFAULT TRUE;
-    ALTER TABLE tenants ADD COLUMN fecha_vencimiento TIMESTAMP;
+  tenants     → un registro por cliente (negocio)
+  sucursales  → locales/puntos de venta de cada tenant
+  productos   → catálogo de productos por sucursal
+  categorias  → categorías de productos por sucursal
+  ventas      → transacciones individuales del POS (legacy)
+  ordenes     → órdenes atómicas (transacciones completas)
+  orden_items → líneas de cada orden
 """
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Boolean,
@@ -46,6 +32,10 @@ def _uuid() -> str:
     return str(uuid.uuid4())
 
 
+def _utcnow():
+    return datetime.now(timezone.utc)
+
+
 class Tenant(Base):
     __tablename__ = "tenants"
 
@@ -53,12 +43,14 @@ class Tenant(Base):
     email              = Column(String,  unique=True, nullable=False, index=True)
     password_hash      = Column(String,  nullable=False)
     nombre             = Column(String,  nullable=False)
+    propietario        = Column(String,  nullable=True)
+    telefono           = Column(String,  nullable=True)
     plan               = Column(String,  default="starter")
     activo             = Column(Boolean, default=True)
     es_admin           = Column(Boolean, default=False)
     plan_activo        = Column(Boolean, default=True)
-    fecha_vencimiento  = Column(DateTime, nullable=True)
-    creado_en          = Column(DateTime, default=datetime.utcnow)
+    fecha_vencimiento  = Column(DateTime(timezone=True), nullable=True)
+    creado_en          = Column(DateTime(timezone=True), default=_utcnow)
 
     sucursales = relationship("Sucursal",  back_populates="tenant", cascade="all, delete-orphan")
     productos  = relationship("Producto",  back_populates="tenant", cascade="all, delete-orphan")
@@ -83,26 +75,29 @@ class Sucursal(Base):
 class Producto(Base):
     __tablename__ = "productos"
 
-    id          = Column(String,  primary_key=True, default=_uuid)
-    tenant_id   = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
-    sucursal_id = Column(String,  ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=True,  index=True)
-    nombre      = Column(String,  nullable=False)
-    precio      = Column(Float,   nullable=False)
-    insumos     = Column(Text,    default="")
-    categoria   = Column(String,  default="General")
-    activo      = Column(Boolean, default=True)
+    id           = Column(String,  primary_key=True, default=_uuid)
+    tenant_id    = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
+    sucursal_id  = Column(String,  ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=True,  index=True)
+    nombre       = Column(String,  nullable=False)
+    precio       = Column(Float,   nullable=False)
+    insumos      = Column(Text,    default="")
+    categoria    = Column(String,  default="General")
+    categoria_id = Column(String,  ForeignKey("categorias.id"), nullable=True, index=True)
+    activo       = Column(Boolean, default=True)
 
-    tenant   = relationship("Tenant",   back_populates="productos")
-    sucursal = relationship("Sucursal", back_populates="productos")
+    tenant       = relationship("Tenant",    back_populates="productos")
+    sucursal     = relationship("Sucursal",  back_populates="productos")
+    categoria_rel = relationship("Categoria", foreign_keys=[categoria_id])
 
 
 class Venta(Base):
+    """Legacy: ventas individuales. Nuevas ventas se crean vía Orden."""
     __tablename__ = "ventas"
 
     id               = Column(String,   primary_key=True, default=_uuid)
     tenant_id        = Column(Integer,  ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
     sucursal_id      = Column(String,   ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=True,  index=True)
-    fecha            = Column(DateTime, default=datetime.utcnow, index=True)
+    fecha            = Column(DateTime(timezone=True), default=_utcnow, index=True)
     producto_id      = Column(String,   nullable=False)
     producto_nombre  = Column(String,   nullable=False)
     cantidad         = Column(Integer,  nullable=False)
@@ -126,3 +121,37 @@ class Categoria(Base):
 
     tenant   = relationship("Tenant",   back_populates="categorias")
     sucursal = relationship("Sucursal", back_populates="categorias")
+
+
+class Orden(Base):
+    """Orden atómica — una transacción completa del POS."""
+    __tablename__ = "ordenes"
+
+    id          = Column(String,  primary_key=True, default=_uuid)
+    tenant_id   = Column(Integer, ForeignKey("tenants.id", ondelete="CASCADE"),   nullable=False, index=True)
+    sucursal_id = Column(String,  ForeignKey("sucursales.id", ondelete="CASCADE"), nullable=False, index=True)
+    fecha       = Column(DateTime(timezone=True), default=_utcnow, index=True)
+    metodo_pago = Column(String,  nullable=False)
+    subtotal    = Column(Float,   nullable=False)
+    domicilio   = Column(Float,   default=0)
+    total       = Column(Float,   nullable=False)
+    anulada     = Column(Boolean,  default=False)
+
+    tenant   = relationship("Tenant")
+    sucursal = relationship("Sucursal")
+    items    = relationship("OrdenItem", back_populates="orden", cascade="all, delete-orphan")
+
+
+class OrdenItem(Base):
+    """Línea individual dentro de una orden."""
+    __tablename__ = "orden_items"
+
+    id              = Column(String, primary_key=True, default=_uuid)
+    orden_id        = Column(String, ForeignKey("ordenes.id", ondelete="CASCADE"), nullable=False, index=True)
+    producto_id     = Column(String, nullable=False)
+    producto_nombre = Column(String, nullable=False)
+    cantidad        = Column(Integer, nullable=False)
+    precio_unitario = Column(Float,  nullable=False)
+    total           = Column(Float,  nullable=False)
+
+    orden = relationship("Orden", back_populates="items")

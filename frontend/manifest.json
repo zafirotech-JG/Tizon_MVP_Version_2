@@ -1,0 +1,16 @@
+﻿{
+  "name": "Tizón POS",
+  "short_name": "Tizón",
+  "description": "Sistema de Punto de Venta Asadero Tizón",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/fire.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

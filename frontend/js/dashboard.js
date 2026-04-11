@@ -6,6 +6,7 @@ import { API }           from "./api.js";
 import { getSucursalId } from "./sucursal.js";
 import { showToast, formatCOP } from "./utils.js";
 import { isAdmin } from "./auth.js";
+import { showPrompt, showPinDialog, showConfirm } from "./dialog.js";
 
 let _dashboardIniciado = false;
 let _chartInstance     = null;
@@ -37,6 +38,9 @@ export async function initDashboard() {
         limpiarReporte();
         return;
     }
+
+    // Show skeleton loaders while data loads
+    showMetricSkeletons();
     await cargarReporte(hoy);
 }
 
@@ -56,6 +60,25 @@ function limpiarReporte() {
     if (historial) historial.style.display = "none";
 }
 
+function showMetricSkeletons() {
+    ["resumen-total","resumen-efectivo","resumen-nequi","resumen-daviplata","resumen-tarjeta"]
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = " ";
+                el.classList.add("skeleton-text");
+            }
+        });
+}
+
+function hideMetricSkeletons() {
+    ["resumen-total","resumen-efectivo","resumen-nequi","resumen-daviplata","resumen-tarjeta"]
+        .forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove("skeleton-text");
+        });
+}
+
 async function cargarReporte(fecha) {
     const sucursalId = getSucursalId();
     if (!sucursalId) { limpiarReporte(); return; }
@@ -65,17 +88,19 @@ async function cargarReporte(fecha) {
     if (btnCargar) { btnCargar.disabled = true; btnCargar.textContent = "Cargando..."; }
 
     try {
-        const [reporte, ventas] = await Promise.all([
+        const [reporte, ordenes] = await Promise.all([
             API.reportes.dia(sucursalId, fecha),
-            isAdmin() ? API.ventas.listar(sucursalId, fecha).catch(() => []) : Promise.resolve([]),
+            API.ordenes.listar(sucursalId, fecha).catch(() => []),
         ]);
-        _ventasDelDia = ventas;
+        _ventasDelDia = ordenes;
 
+        hideMetricSkeletons();
         renderTablaProductos(reporte.productos);
         renderResumenCaja(reporte.resumen_caja);
         renderChartProductos(reporte.productos);
-        if (isAdmin()) renderHistorialVentas(ventas);
+        renderHistorialVentas(ordenes);
     } catch (err) {
+        hideMetricSkeletons();
         showToast(`Error cargando reporte: ${err.message}`, "error");
     } finally {
         if (btnCargar) { btnCargar.disabled = false; btnCargar.textContent = "Cargar"; }
@@ -134,74 +159,46 @@ function renderHistorialVentas(ventas) {
         return;
     }
 
-    tbody.innerHTML = ventas.map(v => `
-        <tr class="${v.anulada ? 'venta-anulada' : ''}">
-            <td style="font-size:0.8rem;color:var(--text-muted)">${v.fecha.slice(11, 16)}</td>
-            <td>${v.producto_nombre}</td>
-            <td class="text-center">${v.cantidad}</td>
-            <td class="text-right">${formatCOP(v.total)}</td>
+    tbody.innerHTML = ventas.map(o => {
+        const shortId = o.id.split("-")[0];
+        const names = o.items.map(i => `${i.cantidad}x ${i.producto_nombre}`).join("<br>");
+        const totalItems = o.items.reduce((s, i) => s + i.cantidad, 0);
+
+        return `
+        <tr class="${o.anulada ? 'venta-anulada' : ''}">
+            <td style="font-size:0.8rem;color:var(--text-muted)">${o.fecha.slice(11, 16)}</td>
+            <td>
+                <div>Orden #${shortId}</div>
+                <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.2; margin-top:2px;">${names}</div>
+            </td>
+            <td class="text-center">${totalItems}</td>
+            <td class="text-right">${formatCOP(o.total)}</td>
             <td class="text-center">
-                <span class="metodo-badge metodo-${v.metodo_pago.toLowerCase()}">${v.metodo_pago}</span>
+                <span class="metodo-badge metodo-${o.metodo_pago.toLowerCase()}">${o.metodo_pago}</span>
             </td>
             <td class="text-center acciones-venta-cell">
-                ${v.anulada
+                ${o.anulada
                     ? `<span class="badge-anulada">ANULADA</span>`
                     : `<div class="venta-actions">
-                           <button class="btn-icon btn-editar-venta" data-id="${v.id}" data-nombre="${v.producto_nombre}" data-cantidad="${v.cantidad}" title="Editar cantidad">
-                               <i class="ph ph-pencil-simple icon-sm"></i>
-                           </button>
-                           <button class="btn-icon btn-anular-venta" data-id="${v.id}" data-nombre="${v.producto_nombre}" title="Anular venta">
+                           <button class="btn-icon btn-anular-venta" data-id="${o.id}" data-nombre="Orden #${shortId}" title="Anular orden completa">
                                <i class="ph ph-trash icon-sm"></i>
                            </button>
                        </div>`
                 }
             </td>
-        </tr>
-    `).join("");
-
-    tbody.querySelectorAll(".btn-editar-venta").forEach(btn => {
-        btn.addEventListener("click", () =>
-            editarCantidadVenta(btn.dataset.id, btn.dataset.nombre, parseInt(btn.dataset.cantidad))
-        );
-    });
+        </tr>`;
+    }).join("");
 
     tbody.querySelectorAll(".btn-anular-venta").forEach(btn => {
         btn.addEventListener("click", () => confirmarAnulacion(btn.dataset.id, btn.dataset.nombre));
     });
 }
 
-async function editarCantidadVenta(ventaId, productoNombre, cantidadActual) {
-    const nueva = prompt(
-        `Editar cantidad de "${productoNombre}"\n\nCantidad actual: ${cantidadActual}\n\nIngresa la nueva cantidad:`,
-        cantidadActual
-    );
-    if (nueva === null) return;
-
-    const qty = parseInt(nueva);
-    if (isNaN(qty) || qty < 1) {
-        showToast("La cantidad debe ser un número mayor a 0", "warning");
-        return;
-    }
-    if (qty === cantidadActual) return;
-
-    const pin = prompt("Ingresa el PIN de administrador para confirmar:");
-    if (pin === null) return;
-    if (!pin.trim()) {
-        showToast("Debes ingresar el PIN", "warning");
-        return;
-    }
-
-    try {
-        await API.ventas.editar(ventaId, { cantidad: qty }, pin.trim());
-        showToast(`Cantidad actualizada a ${qty}`, "success");
-        await cargarReporte(_fechaActual);
-    } catch (err) {
-        showToast(`Error: ${err.message}`, "error");
-    }
-}
-
 async function confirmarAnulacion(ventaId, productoNombre) {
-    const pin = prompt(`¿Anular la venta de "${productoNombre}"?\n\nEsta acción no se puede deshacer.\nIngresa el PIN de administrador para confirmar:`);
+    const pin = await showPinDialog({
+        title: "Anular venta",
+        body: `¿Anular la venta de "${productoNombre}"? Esta acción no se puede deshacer.`,
+    });
     if (pin === null) return;
 
     if (!pin.trim()) {
@@ -210,8 +207,8 @@ async function confirmarAnulacion(ventaId, productoNombre) {
     }
 
     try {
-        await API.ventas.anular(ventaId, pin.trim());
-        showToast("Venta anulada correctamente", "success");
+        await API.ordenes.anular(ventaId, pin.trim());
+        showToast("Orden anulada correctamente", "success");
         await cargarReporte(_fechaActual);
     } catch (err) {
         showToast(`Error: ${err.message}`, "error");

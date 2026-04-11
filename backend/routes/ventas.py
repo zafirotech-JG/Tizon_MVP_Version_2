@@ -1,7 +1,8 @@
 """
-routes/ventas.py — Registro, listado y anulación de transacciones POS
+routes/ventas.py — Registro, listado y anulación de transacciones POS (legacy)
+Nota: Nuevas ventas deben usar POST /api/ordenes para transacciones atómicas.
 """
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Depends, Query
@@ -21,6 +22,7 @@ router = APIRouter(prefix="/api/ventas", tags=["Ventas"])
 def listar_ventas(
     sucursal_id: str = Query(..., description="ID de la sucursal"),
     fecha: Optional[str] = Query(None, description="Fecha YYYY-MM-DD. Default: hoy"),
+    tz_offset: int = Query(-5, description="UTC offset en horas (ej: -5 para Colombia)"),
     user: dict    = Depends(get_current_user),
     db:   Session = Depends(get_db),
 ):
@@ -34,8 +36,8 @@ def listar_ventas(
         raise HTTPException(status_code=404, detail="Sucursal no encontrada")
 
     if fecha is None:
-        from datetime import date
-        fecha = date.today().isoformat()
+        now_local = datetime.now(timezone.utc) + timedelta(hours=tz_offset)
+        fecha = now_local.date().isoformat()
 
     ventas = (
         db.query(Venta)
@@ -117,7 +119,7 @@ def registrar_venta(
     venta = Venta(
         tenant_id       = user["tenant_id"],
         sucursal_id     = data.sucursal_id,
-        fecha           = datetime.utcnow(),
+        fecha           = datetime.now(timezone.utc),
         producto_id     = data.producto_id,
         producto_nombre = nombre_producto,
         cantidad        = data.cantidad,

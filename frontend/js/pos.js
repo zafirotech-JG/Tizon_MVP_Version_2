@@ -363,7 +363,7 @@ function calcularCambioInline() {
     }
 }
 
-// ── Registro de venta ──────────────────────────────────────────────────────
+// ── Registro de venta (atómico) ────────────────────────────────────────────
 async function registrarVenta() {
     if (carrito.length === 0 || !metodoPagoSeleccionado) return;
 
@@ -374,49 +374,30 @@ async function registrarVenta() {
     }
 
     const btnRegistrar = document.getElementById("btn-registrar-inline");
-    if (btnRegistrar) { btnRegistrar.disabled = true; btnRegistrar.textContent = "Registrando…"; }
-
-    let exitosos = 0;
-    let errores  = 0;
+    if (btnRegistrar) {
+        btnRegistrar.disabled = true;
+        btnRegistrar.innerHTML = '<i class="ph ph-spinner icon-sm" style="animation:spin 1s linear infinite"></i> Registrando…';
+    }
 
     const totalUnidades = carrito.reduce((sum, i) => sum + i.cantidad, 0);
     const subtotal      = carrito.reduce((sum, i) => sum + (i.precio * i.cantidad), 0);
     const domicilio     = domicilioActivo ? totalUnidades * DOMICILIO_POR_UNIDAD : 0;
     const total         = subtotal + domicilio;
 
-    for (const item of carrito) {
-        try {
-            await API.ventas.registrar({
-                producto_id:  item.id,
-                cantidad:     item.cantidad,
-                metodo_pago:  metodoPagoSeleccionado,
-                sucursal_id:  sucursalId,
-            });
-            exitosos++;
-        } catch (err) {
-            errores++;
-            showToast(`Error registrando ${item.nombre}: ${err.message}`, "error");
-        }
-    }
+    // Build items array for the atomic order
+    const items = carrito.map(item => ({
+        producto_id: item.id,
+        cantidad:    item.cantidad,
+    }));
 
-    // Registrar domicilio como venta separada
-    if (domicilioActivo && domicilio > 0) {
-        try {
-            await API.ventas.registrar({
-                producto_id:     "__domicilio__",
-                producto_nombre: "Domicilio",
-                precio_unitario: DOMICILIO_POR_UNIDAD,
-                cantidad:        totalUnidades,
-                metodo_pago:     metodoPagoSeleccionado,
-                sucursal_id:     sucursalId,
-            });
-            exitosos++;
-        } catch (err) {
-            errores++;
-        }
-    }
+    try {
+        await API.ordenes.crear({
+            sucursal_id: sucursalId,
+            metodo_pago: metodoPagoSeleccionado,
+            domicilio:   domicilio,
+            items:       items,
+        });
 
-    if (exitosos > 0) {
         const datosRecibo = {
             items:              [...carrito],
             metodoPago:         metodoPagoSeleccionado,
@@ -428,19 +409,17 @@ async function registrarVenta() {
             nombreRestaurante:  localStorage.getItem("tizon_tenant_nombre") || "Tizón",
         };
 
-        showToast(`Venta registrada — ${formatCOP(total)}`, "success");
+        showToast(`Orden registrada — ${formatCOP(total)}`, "success");
         cerrarCarritoMobile();
         vaciarCarrito();
         mostrarBotonRecibo(datosRecibo);
-    }
-
-    if (errores > 0 && exitosos === 0) {
-        showToast("No se pudo registrar la venta", "error");
-    }
-
-    if (btnRegistrar) {
-        btnRegistrar.disabled = false;
-        btnRegistrar.innerHTML = '<i class="ph ph-check-circle icon-sm"></i> Registrar Venta';
+    } catch (err) {
+        showToast(`Error: ${err.message}`, "error");
+    } finally {
+        if (btnRegistrar) {
+            btnRegistrar.disabled = false;
+            btnRegistrar.innerHTML = '<i class="ph ph-check-circle icon-sm"></i> Registrar Venta';
+        }
     }
 }
 
@@ -589,4 +568,51 @@ function bindEventos() {
     });
 
     document.getElementById("pago-recibido-inline")?.addEventListener("input", calcularCambioInline);
+
+    // ── Keyboard Shortcuts (desktop) ────────────────────────────────────
+    document.addEventListener("keydown", (e) => {
+        // Only when POS section is active
+        const posSection = document.getElementById("seccion-pos");
+        if (!posSection || !posSection.classList.contains("active")) return;
+        // Skip if a modal/dialog is open
+        if (document.querySelector(".modal-overlay.open, .dialog-overlay.open")) return;
+        // Skip if already in an input
+        const tag = document.activeElement?.tagName;
+        if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+            if (e.key === "Escape") {
+                document.activeElement.blur();
+                e.preventDefault();
+            }
+            return;
+        }
+
+        const pagoInline = document.getElementById("pago-inline");
+        const pagoVisible = pagoInline && pagoInline.style.display !== "none";
+
+        if (e.key === "/" && !e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            document.getElementById("buscar-producto")?.focus();
+        }
+
+        if (e.key === "Enter" && pagoVisible && metodoPagoSeleccionado && carrito.length > 0) {
+            e.preventDefault();
+            registrarVenta();
+        }
+
+        if (e.key === "Escape" && pagoVisible) {
+            e.preventDefault();
+            ocultarPagoInline();
+        }
+
+        // Number keys 1-4 for payment methods
+        if (pagoVisible && ["1","2","3","4"].includes(e.key)) {
+            const methods = ["Efectivo", "Nequi", "Daviplata", "Tarjeta"];
+            const idx = parseInt(e.key) - 1;
+            const pill = document.querySelector(`#pago-pills-inline .pago-pill[data-valor="${methods[idx]}"]`);
+            if (pill) {
+                e.preventDefault();
+                seleccionarMetodoPagoInline(pill);
+            }
+        }
+    });
 }

@@ -113,11 +113,12 @@ def eliminar_categoria(
     if not cat:
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
 
-    # Verificar si hay productos activos en esta categoría
+    # Verificar si hay productos activos en esta categoría EN ESTA SUCURSAL
     productos_activos = db.query(Producto).filter(
-        Producto.tenant_id  == user["tenant_id"],
-        Producto.categoria  == cat.nombre,
-        Producto.activo     == True,
+        Producto.tenant_id   == user["tenant_id"],
+        Producto.sucursal_id == cat.sucursal_id,
+        Producto.categoria   == cat.nombre,
+        Producto.activo      == True,
     ).count()
 
     if productos_activos > 0:

@@ -5,6 +5,7 @@
 import { initPOS, resetPOS }             from "./pos.js";
 import { initInventario, resetInventario } from "./inventario.js";
 import { initDashboard, resetDashboard }   from "./dashboard.js";
+import { initAdmin, resetAdmin }           from "./admin.js";
 import { setSucursal, getSucursal, resetSucursal, setSucursales, getSucursales } from "./sucursal.js";
 import { API }       from "./api.js";
 import { showToast } from "./utils.js";
@@ -16,6 +17,7 @@ const modulos = {
     pos:        { init: initPOS },
     inventario: { init: initInventario },
     dashboard:  { init: initDashboard },
+    admin:      { init: initAdmin },
 };
 
 export function mostrarSeccion(nombre) {

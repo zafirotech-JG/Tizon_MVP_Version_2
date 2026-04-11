@@ -90,12 +90,12 @@ function limpiarCache() {
 
 // ── Login ────────────────────────────────────────────────────────────────
 async function handleLogin() {
-    const username = document.getElementById("login-username")?.value.trim();
+    const email    = document.getElementById("login-username")?.value.trim();
     const password = document.getElementById("login-password")?.value;
     const btn      = document.getElementById("btn-login");
 
-    if (!username || !password) {
-        showToast("Ingresa usuario y contraseña", "warning");
+    if (!email || !password) {
+        showToast("Ingresa correo y contraseña", "warning");
         return;
     }
 
@@ -103,7 +103,7 @@ async function handleLogin() {
     btn.textContent = "Ingresando...";
 
     try {
-        const res = await API.auth.login(username, password);
+        const res = await API.auth.login(email, password);
 
         limpiarCache();
 
@@ -112,6 +112,7 @@ async function handleLogin() {
         if (res.nombre) localStorage.setItem("tizon_tenant_nombre", res.nombre);
 
         showToast("Sesión iniciada correctamente", "success");
+        toggleAdminVisibility();
 
         document.getElementById("login-password").value = "";
         document.getElementById("login-overlay").classList.remove("visible");
@@ -120,7 +121,7 @@ async function handleLogin() {
         showToast(`Error: ${err.message}`, "error");
     } finally {
         btn.disabled    = false;
-        btn.textContent = "Entrar";
+        btn.textContent = "Iniciar Sesión";
     }
 }
 
@@ -157,8 +158,11 @@ async function handleRegister() {
     btn.disabled    = true;
     btn.textContent = "Creando cuenta...";
 
+    const propietario = document.getElementById("reg-propietario")?.value.trim() || "";
+    const telefono    = document.getElementById("reg-telefono")?.value.trim() || "";
+
     try {
-        const res = await API.auth.register(email, password, nombre);
+        const res = await API.auth.register(email, password, nombre, propietario, telefono);
 
         limpiarCache();
 
@@ -166,6 +170,7 @@ async function handleRegister() {
         localStorage.setItem("tizon_es_admin",   String(res.es_admin || false));
         localStorage.setItem("tizon_tenant_nombre", res.nombre);
         showToast(`Bienvenido, ${res.nombre}`, "success");
+        toggleAdminVisibility();
 
         document.getElementById("login-overlay").classList.remove("visible");
         window.dispatchEvent(new CustomEvent("tizon:login"));
@@ -191,6 +196,7 @@ export function handleLogout() {
     localStorage.removeItem("tizon_tenant_nombre");
     localStorage.removeItem("tizon_es_admin");
     limpiarCache();
+    toggleAdminVisibility();
 
     window.dispatchEvent(new CustomEvent("tizon:logout"));
 
@@ -198,4 +204,12 @@ export function handleLogout() {
     if (overlay) overlay.classList.add("visible");
     document.getElementById("form-login")?.classList.remove("hidden");
     document.getElementById("form-registro")?.classList.add("hidden");
+}
+
+/** Show/hide admin nav items based on current user's admin status */
+function toggleAdminVisibility() {
+    const show = isAdmin();
+    document.querySelectorAll('[data-seccion="admin"]').forEach(el => {
+        el.style.display = show ? "" : "none";
+    });
 }
