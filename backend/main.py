@@ -101,7 +101,10 @@ def serve_frontend():
 @app.get("/admin", include_in_schema=False)
 @app.get("/admin.html", include_in_schema=False)
 def serve_admin():
-    return FileResponse(os.path.join(_frontend, "admin.html"))
+    return FileResponse(
+        os.path.join(_frontend, "admin.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
 
 @app.get("/manifest.json", include_in_schema=False)
 def serve_manifest():
