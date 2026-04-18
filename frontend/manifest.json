@@ -1,16 +1,22 @@
 ﻿{
-  "name": "Tizón POS",
-  "short_name": "Tizón",
-  "description": "Sistema de Punto de Venta Asadero Tizón",
+  "name": "Zafiro POS",
+  "short_name": "Zafiro",
+  "description": "POS Inteligente White-Label para tu Negocio",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111111",
-  "theme_color": "#111111",
+  "background_color": "#0a1628",
+  "theme_color": "#1e5fd9",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/phosphor-icons/core/main/assets/regular/fire.svg",
+      "src": "/assets/zafiro-logo.svg",
       "sizes": "192x192",
       "type": "image/svg+xml"
+    },
+    {
+      "src": "/assets/zafiro-gem-icon.svg",
+      "sizes": "48x48",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
