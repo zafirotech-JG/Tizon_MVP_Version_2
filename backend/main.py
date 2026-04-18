@@ -15,7 +15,7 @@ from backend.core.logger import logger
 from backend.db.session import Base, SessionLocal, engine
 from backend.models import orm as _orm  # noqa: F401 — carga modelos para metadata
 from backend.models.orm import OnboardingProgress, Tenant, TenantBranding, Usuario
-from backend.routes import admin, auth, categorias, ordenes, productos, reportes, sucursales, ventas
+from backend.routes import admin, auth, auth_v3, categorias, ordenes, productos, reportes, sucursales, usuarios, ventas
 
 
 def _seed_admin() -> None:
@@ -137,6 +137,9 @@ app.include_router(ventas.router)
 app.include_router(ordenes.router)
 app.include_router(reportes.router)
 app.include_router(admin.router)
+# ── v3 — Auth con roles + gestión de usuarios ───────────────────────
+app.include_router(auth_v3.router)
+app.include_router(usuarios.router)
 
 _frontend = str(FRONTEND_DIR)
 
