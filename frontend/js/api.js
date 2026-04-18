@@ -2,10 +2,7 @@
  * api.js — Capa de comunicación con el backend Tizón V2
  */
 
-const isLocal = ["localhost", "127.0.0.1"].includes(window.location.hostname);
-const BASE_URL = isLocal
-    ? ""
-    : "https://tizonmvpversion2-production.up.railway.app";
+const BASE_URL = "";
 
 /** UTC offset (horas) — se envía al backend en endpoints con fecha */
 const TZ_OFFSET = -(new Date().getTimezoneOffset() / 60);

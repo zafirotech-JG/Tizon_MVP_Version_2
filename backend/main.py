@@ -97,3 +97,12 @@ app.mount("/js", StaticFiles(directory=os.path.join(_frontend, "js")), name="js"
 @app.get("/", include_in_schema=False)
 def serve_frontend():
     return FileResponse(os.path.join(_frontend, "index.html"))
+
+@app.get("/admin", include_in_schema=False)
+@app.get("/admin.html", include_in_schema=False)
+def serve_admin():
+    return FileResponse(os.path.join(_frontend, "admin.html"))
+
+@app.get("/manifest.json", include_in_schema=False)
+def serve_manifest():
+    return FileResponse(os.path.join(_frontend, "manifest.json"))
