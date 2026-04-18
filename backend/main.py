@@ -14,7 +14,7 @@ from backend.core.config import FRONTEND_DIR, cors_origins
 from backend.core.logger import logger
 from backend.db.session import Base, SessionLocal, engine
 from backend.models import orm as _orm  # noqa: F401 — carga modelos para metadata
-from backend.models.orm import Tenant
+from backend.models.orm import OnboardingProgress, Tenant, TenantBranding, Usuario
 from backend.routes import admin, auth, categorias, ordenes, productos, reportes, sucursales, ventas
 
 
@@ -47,6 +47,55 @@ def _seed_admin() -> None:
         db.close()
 
 
+def _backfill_tenants_v3() -> None:
+    """Migración idempotente: crea branding/onboarding/usuario-owner para tenants existentes.
+
+    Se ejecuta en cada arranque. Solo crea los registros faltantes (idempotente).
+    """
+    db = SessionLocal()
+    try:
+        tenants = db.query(Tenant).all()
+        creados = 0
+        for t in tenants:
+            # 1) Branding default
+            if not db.query(TenantBranding).filter_by(tenant_id=t.id).first():
+                db.add(TenantBranding(
+                    tenant_id        = t.id,
+                    nombre_comercial = t.nombre or t.email.split("@")[0],
+                    nicho            = "restaurante",
+                ))
+                creados += 1
+            # 2) Onboarding progress — si es admin, lo marcamos como completado
+            if not db.query(OnboardingProgress).filter_by(tenant_id=t.id).first():
+                op = OnboardingProgress(tenant_id=t.id)
+                if t.es_admin:
+                    op.perfil_configurado = True
+                    op.primer_producto    = True
+                    op.primera_venta      = True
+                    op.saltado            = True
+                db.add(op)
+            # 3) Usuario owner/super_admin asociado
+            rol_default = "super_admin" if t.es_admin else "owner"
+            exists = db.query(Usuario).filter_by(tenant_id=t.id, email=t.email).first()
+            if not exists:
+                db.add(Usuario(
+                    tenant_id     = t.id,
+                    email         = t.email,
+                    password_hash = t.password_hash,
+                    nombre        = t.nombre or "Propietario",
+                    rol           = rol_default,
+                    activo        = True,
+                ))
+        db.commit()
+        if creados:
+            logger.info(f"Backfill v3: creados registros de branding/onboarding/usuario para {creados} tenants")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error en backfill v3: {e}")
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Crea tablas si no existen (SQLite crea tizon.db; PostgreSQL usa el schema configurado)."""
@@ -55,6 +104,7 @@ async def lifespan(app: FastAPI):
         Base.metadata.create_all(bind=engine)
         logger.info("Tablas de base de datos verificadas/creadas exitosamente")
         _seed_admin()
+        _backfill_tenants_v3()
     except Exception as e:
         logger.error(f"Error al crear tablas: {e}")
         raise
@@ -92,6 +142,7 @@ _frontend = str(FRONTEND_DIR)
 
 app.mount("/css", StaticFiles(directory=os.path.join(_frontend, "css")), name="css")
 app.mount("/js", StaticFiles(directory=os.path.join(_frontend, "js")), name="js")
+app.mount("/assets", StaticFiles(directory=os.path.join(_frontend, "assets")), name="assets")
 
 
 @app.get("/", include_in_schema=False)

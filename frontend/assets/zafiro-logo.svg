@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 180" fill="none">
+  <defs>
+    <linearGradient id="zafiro-gem" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#4a8aff"/>
+      <stop offset="50%" stop-color="#1e5fd9"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <linearGradient id="zafiro-facet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#6aa3ff"/>
+      <stop offset="100%" stop-color="#2e6fe3"/>
+    </linearGradient>
+    <linearGradient id="zafiro-z" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#dce9ff"/>
+      <stop offset="100%" stop-color="#a6c4ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Gema principal (contorno poligonal) -->
+  <polygon points="100,10 180,60 180,120 100,170 20,120 20,60"
+           fill="url(#zafiro-gem)"
+           stroke="#1e5fd9" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Facetas (planos internos que dan profundidad 3D) -->
+  <polygon points="100,10 180,60 100,90 20,60"
+           fill="url(#zafiro-facet)" opacity="0.85"/>
+  <polygon points="20,60 100,90 100,170"
+           fill="#1e5fd9" opacity="0.55"/>
+  <polygon points="180,60 100,90 100,170"
+           fill="#0a1628" opacity="0.45"/>
+
+  <!-- Letra Z estilizada (bandas diagonales) -->
+  <path d="M 60,55 L 140,55 L 80,115 L 140,115
+           L 140,130 L 58,130 L 118,70 L 60,70 Z"
+        fill="url(#zafiro-z)"
+        stroke="#ffffff" stroke-width="0.5" stroke-linejoin="round"/>
+
+  <!-- Destello (brillo superior) -->
+  <polygon points="100,15 175,58 100,28"
+           fill="#ffffff" opacity="0.25"/>
+</svg>
