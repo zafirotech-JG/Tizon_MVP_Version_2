@@ -394,7 +394,7 @@
     btn.textContent = "Ingresando…";
 
     try {
-      const res = await api("POST", "/api/admin/login", { username: email, password });
+      const res = await api("POST", "/api/admin/login", { email, password });
       adminToken = res.access_token;
       localStorage.setItem("tizon_admin_token", adminToken);
       mostrarPanel();
