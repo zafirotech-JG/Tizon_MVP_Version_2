@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class MetodoPago(str, Enum):
@@ -322,3 +322,52 @@ class RegisterResponse(BaseModel):
     token_type:   str = "bearer"
     nombre:       str
     es_admin:     bool = False
+
+
+# ══ v3 — Auth con roles + refresh tokens ═════════════════════════════
+class UsuarioPublico(BaseModel):
+    id:          int
+    email:       str
+    nombre:      str
+    rol:         str
+    tenant_id:   int
+    sucursal_id: str | None = None
+
+
+class TokenPair(BaseModel):
+    """Respuesta estándar de endpoints de auth v3: access + refresh + datos usuario."""
+    access_token:  str
+    refresh_token: str
+    token_type:    str = "bearer"
+    expires_in:    int                  # segundos
+    usuario:       UsuarioPublico
+
+
+class RegisterV3Request(BaseModel):
+    """Registro de un nuevo NEGOCIO (tenant) + su usuario owner."""
+    email:            EmailStr
+    password:         str = Field(..., min_length=8, description="Mínimo 8 caracteres")
+    nombre_comercial: str = Field(..., min_length=2, max_length=100)
+    nombre_propietario: str = Field(..., min_length=2)
+    nicho:            str = Field(default="restaurante",
+                                   pattern="^(restaurante|retail|farmacia|servicio|otro)$")
+    telefono:         str = ""
+
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class LoginPinRequest(BaseModel):
+    tenant_id: int
+    pin:       str = Field(..., min_length=4, max_length=6, pattern="^[0-9]+$")
+
+
+class CrearUsuarioRequest(BaseModel):
+    """Owner/Manager crea un usuario operativo para su tenant."""
+    email:       EmailStr
+    password:    str = Field(..., min_length=6)
+    nombre:      str = Field(..., min_length=2)
+    rol:         str = Field(..., pattern="^(manager|cajero|inventario)$")
+    sucursal_id: str | None = None
+    pin:         str | None = Field(None, pattern="^[0-9]{4,6}$")

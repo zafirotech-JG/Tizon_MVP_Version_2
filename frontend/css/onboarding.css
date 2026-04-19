@@ -1,0 +1,146 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Onboarding — Tema Zafiro para Shepherd.js
+   
+   El tour usa la estética de la plataforma (azul Zafiro), NO los colores
+   del tenant — reforzando la identidad de marca durante la primera exp.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Step container ──────────────────────────────────────────────────── */
+.zafiro-shepherd.shepherd-element {
+    background: var(--bg-card, #1a1714);
+    border: 1px solid var(--zafiro-blue, #1e5fd9);
+    border-radius: 16px;
+    box-shadow:
+        0 20px 60px rgba(30, 95, 217, 0.25),
+        0 0 0 1px rgba(30, 95, 217, 0.15);
+    max-width: 420px;
+    font-family: var(--font-family, 'Inter', system-ui, sans-serif);
+    z-index: 10001;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+.zafiro-shepherd .shepherd-header {
+    background: linear-gradient(135deg, var(--zafiro-blue, #1e5fd9), var(--zafiro-blue-glow, #4a8aff));
+    border-radius: 16px 16px 0 0;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.zafiro-shepherd .shepherd-title {
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin: 0;
+}
+.zafiro-shepherd .shepherd-cancel-icon {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.2rem;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px;
+    transition: color 0.15s;
+}
+.zafiro-shepherd .shepherd-cancel-icon:hover {
+    color: #fff;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+.zafiro-shepherd .shepherd-text {
+    padding: 20px;
+    color: var(--text-primary, #f5f0eb);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+.zafiro-shepherd .shepherd-text p {
+    margin: 0 0 8px 0;
+}
+
+/* ── Footer / Buttons ────────────────────────────────────────────────── */
+.zafiro-shepherd .shepherd-footer {
+    padding: 12px 20px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.zafiro-shepherd .shepherd-button {
+    background: var(--zafiro-blue, #1e5fd9);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    min-height: 42px;
+}
+.zafiro-shepherd .shepherd-button:hover {
+    background: var(--zafiro-blue-glow, #4a8aff);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(30, 95, 217, 0.4);
+}
+.zafiro-shepherd .shepherd-button:active {
+    transform: translateY(0);
+}
+.zafiro-shepherd .shepherd-button-secondary {
+    background: transparent;
+    border: 1px solid var(--border, rgba(168, 159, 149, 0.15));
+    color: var(--text-secondary, #a89f95);
+}
+.zafiro-shepherd .shepherd-button-secondary:hover {
+    background: var(--bg-elevated, #252220);
+    border-color: var(--text-muted, #6b635b);
+    box-shadow: none;
+    transform: none;
+}
+
+/* ── Overlay ─────────────────────────────────────────────────────────── */
+.shepherd-modal-overlay-container {
+    z-index: 10000;
+}
+
+/* ── Progress indicator ──────────────────────────────────────────────── */
+.zafiro-onboarding-progress {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 0 20px 12px;
+}
+.zafiro-onboarding-progress .step-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong, rgba(168, 159, 149, 0.3));
+    transition: background 0.3s, transform 0.3s;
+}
+.zafiro-onboarding-progress .step-dot.active {
+    background: var(--zafiro-blue-glow, #4a8aff);
+    transform: scale(1.3);
+}
+.zafiro-onboarding-progress .step-dot.done {
+    background: var(--success, #22c55e);
+}
+
+/* ── Celebration animation (step final) ──────────────────────────────── */
+.onboarding-celebration {
+    text-align: center;
+    padding: 8px 0;
+}
+.onboarding-celebration .celebration-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    animation: celebrate-bounce 0.6s ease-out;
+}
+@keyframes celebrate-bounce {
+    0%   { transform: scale(0.3); opacity: 0; }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1);   opacity: 1; }
+}
+
+/* ── Arrow ───────────────────────────────────────────────────────────── */
+.zafiro-shepherd .shepherd-arrow::before {
+    background: var(--bg-card, #1a1714);
+    border: 1px solid var(--zafiro-blue, #1e5fd9);
+}

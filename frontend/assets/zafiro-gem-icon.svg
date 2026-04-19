@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Versión micro (sin Z) para brand anchors y favicons -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="g-mini" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a8aff"/>
+      <stop offset="100%" stop-color="#1e5fd9"/>
+    </linearGradient>
+  </defs>
+  <polygon points="12,2 21,8 21,16 12,22 3,16 3,8"
+           fill="url(#g-mini)" stroke="#0a1628" stroke-width="0.5"/>
+  <polygon points="12,2 21,8 12,11 3,8" fill="#6aa3ff" opacity="0.8"/>
+  <polygon points="3,8 12,11 12,22" fill="#1e5fd9" opacity="0.6"/>
+</svg>
