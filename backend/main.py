@@ -23,8 +23,12 @@ from backend.routes import (
 
 
 def _seed_admin() -> None:
-    """Crea el primer usuario admin si no existe ninguno, usando ADMIN_EMAIL y ADMIN_PASSWORD."""
-    admin_email    = os.getenv("ADMIN_EMAIL", "").strip()
+    """Crea el primer usuario admin si no existe ninguno, usando ADMIN_EMAIL y ADMIN_PASSWORD.
+
+    El email se normaliza a minúsculas para coincidir con la normalización del login
+    (`auth_v3.login` hace `.strip().lower()` antes de buscar).
+    """
+    admin_email    = os.getenv("ADMIN_EMAIL", "").strip().lower()
     admin_password = os.getenv("ADMIN_PASSWORD", "").strip()
     if not admin_email or not admin_password:
         return
