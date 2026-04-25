@@ -14,7 +14,7 @@ from backend.core.config import FRONTEND_DIR, cors_origins
 from backend.core.logger import logger
 from backend.db.session import Base, SessionLocal, engine
 from backend.models import orm as _orm  # noqa: F401 — carga modelos para metadata
-from backend.models.orm import OnboardingProgress, Tenant, TenantBranding, Usuario
+from backend.models.orm import OnboardingProgress, Sucursal, Tenant, TenantBranding, Usuario
 from backend.routes import (
     admin, auth, auth_v3, branding, categorias,
     onboarding, ordenes, productos, reportes,
@@ -78,7 +78,21 @@ def _backfill_tenants_v3() -> None:
                     op.primera_venta      = True
                     op.saltado            = True
                 db.add(op)
-            # 3) Usuario owner/super_admin asociado
+            # 3) Sucursal default "Principal" si no tiene ninguna (solo tenants no-admin)
+            sucursal_default_id = None
+            if not t.es_admin:
+                sucursal_existente = db.query(Sucursal).filter_by(
+                    tenant_id=t.id, activo=True
+                ).first()
+                if sucursal_existente:
+                    sucursal_default_id = sucursal_existente.id
+                else:
+                    s = Sucursal(tenant_id=t.id, nombre="Principal")
+                    db.add(s)
+                    db.flush()
+                    sucursal_default_id = s.id
+
+            # 4) Usuario owner/super_admin asociado
             rol_default = "super_admin" if t.es_admin else "owner"
             exists = db.query(Usuario).filter_by(tenant_id=t.id, email=t.email).first()
             if not exists:
@@ -88,8 +102,12 @@ def _backfill_tenants_v3() -> None:
                     password_hash = t.password_hash,
                     nombre        = t.nombre or "Propietario",
                     rol           = rol_default,
+                    sucursal_id   = sucursal_default_id,
                     activo        = True,
                 ))
+            elif not exists.sucursal_id and sucursal_default_id:
+                # Asignar sucursal si el owner ya existía pero sin sucursal
+                exists.sucursal_id = sucursal_default_id
         db.commit()
         if creados:
             logger.info(f"Backfill v3: creados registros de branding/onboarding/usuario para {creados} tenants")
@@ -119,9 +137,9 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Tizón POS API",
-    description="Sistema de Punto de Venta para Asadero Colombiano — Multi-tenant",
-    version="2.0.0",
+    title="Zafiro POS API",
+    description="POS White-Label Multi-tenant — Zafiro v3",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
@@ -132,6 +150,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def no_cache_static(request, call_next):
+    """Evita cache agresivo del navegador para assets estáticos en desarrollo.
+
+    En producción puedes invertir esto poniendo ENV=prod y usar versionado de assets.
+    """
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith(("/css", "/js", "/assets")) or path.endswith((".html", ".js", ".css")):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 app.include_router(auth.router)
 app.include_router(sucursales.router)
@@ -166,6 +199,34 @@ def serve_admin():
         headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
     )
 
+@app.get("/login", include_in_schema=False)
+@app.get("/login.html", include_in_schema=False)
+def serve_login():
+    return FileResponse(
+        os.path.join(_frontend, "login.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
+
+@app.get("/register", include_in_schema=False)
+@app.get("/register.html", include_in_schema=False)
+def serve_register():
+    return FileResponse(
+        os.path.join(_frontend, "register.html"),
+        headers={"Cache-Control": "no-cache, no-store, must-revalidate"},
+    )
+
+@app.get("/legacy", include_in_schema=False)
+def serve_legacy():
+    path = os.path.join(_frontend, "index-legacy.html")
+    if os.path.exists(path):
+        return FileResponse(path)
+    return FileResponse(os.path.join(_frontend, "index.html"))
+
 @app.get("/manifest.json", include_in_schema=False)
 def serve_manifest():
     return FileResponse(os.path.join(_frontend, "manifest.json"))
+
+@app.get("/api/health", tags=["Health"])
+def health_check():
+    """Health check endpoint para monitoreo y tests."""
+    return {"status": "ok", "version": "3.0.0", "service": "zafiro-pos"}

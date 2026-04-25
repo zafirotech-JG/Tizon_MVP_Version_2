@@ -1,0 +1,42 @@
+/**
+ * main.css — Entry point CSS Zafiro POS v3
+ * Imports organizados por capa
+ */
+
+/* ─────────────────────────────────────────────────────────────────
+   1. CORE — Variables, Reset, Utilities
+   ───────────────────────────────────────────────────────────────── */
+@import url('core/variables.css');
+@import url('core/reset.css');
+@import url('core/utilities.css');
+
+/* ─────────────────────────────────────────────────────────────────
+   2. LAYOUTS — Estructura maestra
+   ───────────────────────────────────────────────────────────────── */
+@import url('layouts/master.css');
+
+/* ─────────────────────────────────────────────────────────────────
+   3. COMPONENTS — UI Elements
+   ───────────────────────────────────────────────────────────────── */
+@import url('components/buttons.css');
+@import url('components/cards.css');
+@import url('components/forms.css');
+@import url('components/app-ui.css');
+@import url('components/combobox.css');
+@import url('components/tutorial.css');
+
+/* ─────────────────────────────────────────────────────────────────
+   4. THEMES — Overrides por tema
+   ───────────────────────────────────────────────────────────────── */
+@import url('themes/dark.css');
+@import url('themes/light.css');
+
+/* ─────────────────────────────────────────────────────────────────
+   5. VIEWS — Estilos específicos por rol
+   ───────────────────────────────────────────────────────────────── */
+@import url('views/cajero.css');
+@import url('views/admin.css');
+
+/* ─────────────────────────────────────────────────────────────────
+   6. SHAME — Hacks temporales (mantener vacío idealmente)
+   ───────────────────────────────────────────────────────────────── */

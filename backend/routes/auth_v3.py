@@ -22,7 +22,7 @@ from backend.auth_v3 import (
     get_current_usuario,
 )
 from backend.db.session import get_db
-from backend.models.orm import OnboardingProgress, Tenant, TenantBranding, Usuario
+from backend.models.orm import OnboardingProgress, Sucursal, Tenant, TenantBranding, Usuario
 from backend.schemas import (
     CrearUsuarioRequest,
     LoginPinRequest,
@@ -42,13 +42,16 @@ router = APIRouter(prefix="/api/v3/auth", tags=["Auth v3"])
 @router.post("/register", response_model=TokenPair, status_code=status.HTTP_201_CREATED)
 def registrar_negocio(data: RegisterV3Request, db: Session = Depends(get_db)):
     """Registra un nuevo negocio completo (atomico)."""
+    # Normalizar email a minúsculas (login también normaliza)
+    email = data.email.strip().lower()
+
     # 1) Validar que el email no exista en Tenants ni en Usuarios
-    if db.query(Tenant).filter_by(email=data.email).first():
+    if db.query(Tenant).filter_by(email=email).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Este correo ya está registrado como negocio.",
         )
-    if db.query(Usuario).filter_by(email=data.email).first():
+    if db.query(Usuario).filter_by(email=email).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Este correo ya está en uso.",
@@ -56,43 +59,60 @@ def registrar_negocio(data: RegisterV3Request, db: Session = Depends(get_db)):
 
     hashed = hash_password(data.password)
 
-    # 2) Crear Tenant (negocio)
-    tenant = Tenant(
-        email         = data.email,
-        password_hash = hashed,
-        nombre        = data.nombre_comercial,
-        propietario   = data.nombre_propietario,
-        telefono      = data.telefono,
-        plan          = "starter",
-        plan_activo   = True,
-    )
-    db.add(tenant)
-    db.flush()  # obtiene tenant.id sin commit
+    try:
+        # 2) Crear Tenant (negocio)
+        tenant = Tenant(
+            email         = email,
+            password_hash = hashed,
+            nombre        = data.nombre_comercial,
+            propietario   = data.nombre_propietario,
+            telefono      = data.telefono,
+            plan          = "starter",
+            plan_activo   = True,
+        )
+        db.add(tenant)
+        db.flush()  # obtiene tenant.id sin commit
 
-    # 3) Crear Branding default con nicho-specific categorías
-    categorias_seed = _categorias_por_nicho(data.nicho)
-    db.add(TenantBranding(
-        tenant_id          = tenant.id,
-        nombre_comercial   = data.nombre_comercial,
-        nicho              = data.nicho,
-        categorias_default = categorias_seed,
-    ))
+        # 3) Crear Branding default con nicho-specific categorías
+        categorias_seed = _categorias_por_nicho(data.nicho)
+        db.add(TenantBranding(
+            tenant_id          = tenant.id,
+            nombre_comercial   = data.nombre_comercial,
+            nicho              = data.nicho,
+            categorias_default = categorias_seed,
+        ))
 
-    # 4) Crear tracking de onboarding
-    db.add(OnboardingProgress(tenant_id=tenant.id))
+        # 4) Crear tracking de onboarding
+        db.add(OnboardingProgress(tenant_id=tenant.id))
 
-    # 5) Crear Usuario owner (mismo email/password que el Tenant)
-    owner = Usuario(
-        tenant_id     = tenant.id,
-        email         = data.email,
-        password_hash = hashed,
-        nombre        = data.nombre_propietario,
-        rol           = Rol.OWNER.value,
-        activo        = True,
-    )
-    db.add(owner)
-    db.commit()
-    db.refresh(owner)
+        # 5) Crear sucursal default "Principal" para que el POS sea operativo desde día 1
+        sucursal_principal = Sucursal(
+            tenant_id = tenant.id,
+            nombre    = "Principal",
+        )
+        db.add(sucursal_principal)
+        db.flush()  # obtiene sucursal.id sin commit
+
+        # 6) Crear Usuario owner asignado a la sucursal principal
+        owner = Usuario(
+            tenant_id     = tenant.id,
+            email         = email,
+            password_hash = hashed,
+            nombre        = data.nombre_propietario,
+            rol           = Rol.OWNER.value,
+            sucursal_id   = sucursal_principal.id,
+            activo        = True,
+        )
+        db.add(owner)
+        db.commit()
+        db.refresh(owner)
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al crear el negocio: {str(e)}",
+        )
 
     return emitir_par_tokens(owner)
 

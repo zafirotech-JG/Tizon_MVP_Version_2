@@ -43,6 +43,9 @@ def crear_usuario(
     db:   Session = Depends(get_db),
 ):
     """Crea un usuario operativo dentro del tenant del solicitante."""
+    # Normalizar email a minúsculas (login también normaliza)
+    email_normalizado = data.email.strip().lower()
+
     # Manager no puede crear otro manager (solo owner puede)
     if data.rol == Rol.MANAGER.value and user["rol"] != Rol.OWNER.value:
         raise HTTPException(
@@ -52,7 +55,7 @@ def crear_usuario(
 
     # Verificar email único dentro del tenant
     existente = db.query(Usuario).filter_by(
-        tenant_id=user["tenant_id"], email=data.email
+        tenant_id=user["tenant_id"], email=email_normalizado
     ).first()
     if existente:
         raise HTTPException(
@@ -73,7 +76,7 @@ def crear_usuario(
 
     nuevo = Usuario(
         tenant_id     = user["tenant_id"],
-        email         = data.email,
+        email         = email_normalizado,
         password_hash = hash_password(data.password),
         nombre        = data.nombre,
         rol           = data.rol,

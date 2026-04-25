@@ -1,14 +1,29 @@
 """
 Motor SQLAlchemy — SQLite en desarrollo, PostgreSQL en producción (DATABASE_URL).
 """
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from backend.core.config import DATABASE_URL
 
-connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+_is_sqlite = DATABASE_URL.startswith("sqlite")
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args)
+connect_args = {"check_same_thread": False, "timeout": 30} if _is_sqlite else {}
+
+engine = create_engine(
+    DATABASE_URL,
+    connect_args=connect_args,
+    pool_pre_ping=True,
+)
+
+# Habilitar WAL en SQLite para mejor concurrencia (reads no bloquean writes)
+if _is_sqlite:
+    @event.listens_for(engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, connection_record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=30000")
+        cursor.close()
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 

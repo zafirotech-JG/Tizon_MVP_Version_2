@@ -1,0 +1,474 @@
+/**
+ * layouts/master.css — Layout Maestro Responsive Mobile-First
+ * Contiene sidebar colapsable, header y área de trabajo
+ */
+
+/* ─────────────────────────────────────────────────────────────────
+   APP SHELL — Contenedor principal
+   ───────────────────────────────────────────────────────────────── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background-color: var(--bg-body);
+}
+
+@media (min-width: 1024px) {
+  .app-shell {
+    flex-direction: row;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIDEBAR — Navegación lateral
+   ───────────────────────────────────────────────────────────────── */
+.sidebar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  height: var(--bottom-nav-height);
+  background-color: var(--bg-surface);
+  border-top: 1px solid var(--border-default);
+  padding: 0 var(--space-2);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Desktop: Sidebar lateral */
+@media (min-width: 1024px) {
+  .sidebar {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: var(--sidebar-width);
+    height: 100vh;
+    border-top: none;
+    border-right: 1px solid var(--border-default);
+    padding: var(--space-4);
+    transition: width var(--transition-base);
+  }
+  
+  .sidebar.collapsed {
+    width: var(--sidebar-collapsed);
+    padding: var(--space-3) var(--space-2);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIDEBAR HEADER — Logo y toggle
+   ───────────────────────────────────────────────────────────────── */
+.sidebar-header {
+  display: none; /* Oculto en mobile */
+}
+
+@media (min-width: 1024px) {
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  
+  .sidebar-header .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    overflow: hidden;
+  }
+  
+  .sidebar-header .brand-logo {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    object-fit: contain;
+  }
+  
+  .sidebar-header .brand-text {
+    display: flex;
+    flex-direction: column;
+    transition: opacity var(--transition-fast), width var(--transition-fast);
+  }
+  
+  .sidebar.collapsed .brand-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+  
+  .sidebar-header .brand-name {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  
+  .sidebar-header .brand-tagline {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    white-space: nowrap;
+  }
+  
+  /* Toggle button */
+  .sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+  }
+  
+  .sidebar-toggle:hover {
+    background-color: var(--bg-hover);
+    color: var(--text-primary);
+  }
+  
+  .sidebar.collapsed .sidebar-toggle {
+    transform: rotate(180deg);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIDEBAR NAV — Menú de navegación
+   ───────────────────────────────────────────────────────────────── */
+.sidebar-nav {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  gap: var(--space-1);
+}
+
+@media (min-width: 1024px) {
+  .sidebar-nav {
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: var(--space-1);
+    flex: 1;
+  }
+}
+
+/* Nav Item */
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+  transition: all var(--transition-fast);
+  position: relative;
+}
+
+.nav-item .icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.nav-item .label {
+  font-size: 0.65rem;
+  font-weight: var(--font-medium);
+}
+
+.nav-item:hover {
+  color: var(--text-secondary);
+  background-color: var(--bg-hover);
+}
+
+.nav-item.active {
+  color: var(--tenant-primary);
+  background-color: color-mix(in srgb, var(--tenant-primary) 12%, transparent);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background-color: var(--tenant-primary);
+  border-radius: var(--radius-full);
+}
+
+/* Desktop nav items */
+@media (min-width: 1024px) {
+  .nav-item {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    min-height: var(--touch-comfort);
+  }
+  
+  .nav-item .icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  
+  .nav-item .label {
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    white-space: nowrap;
+    transition: opacity var(--transition-fast), width var(--transition-fast);
+  }
+  
+  .sidebar.collapsed .nav-item .label {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+  }
+  
+  .nav-item.active::before {
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 3px;
+    height: 100%;
+    border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SIDEBAR FOOTER — User info compacto + Powered by
+   ───────────────────────────────────────────────────────────────── */
+.sidebar-footer {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: auto;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  /* Una línea no-clickable: avatar pequeño + nombre/rol */
+  .user-info-compact {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+  }
+
+  .user-avatar-sm {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--zafiro-blue), var(--zafiro-gem));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-bold);
+    color: white;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+  }
+
+  .user-text {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+    transition: opacity var(--transition-fast), width var(--transition-fast);
+  }
+  .sidebar.collapsed .user-text {
+    opacity: 0;
+    width: 0;
+  }
+  .user-name {
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.25;
+  }
+  .user-role {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-transform: capitalize;
+    white-space: nowrap;
+    line-height: 1.25;
+  }
+
+  /* Powered by — link discreto centrado debajo */
+  .powered-by {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: var(--space-2);
+    font-size: 11px;
+    color: var(--text-tertiary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: color var(--transition-fast), background-color var(--transition-fast);
+  }
+  .powered-by:hover {
+    color: var(--text-secondary);
+    background-color: var(--bg-hover);
+  }
+  .sidebar.collapsed .powered-by span {
+    display: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   MAIN CONTENT — Área de trabajo
+   ───────────────────────────────────────────────────────────────── */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: var(--bottom-nav-height);
+  background-color: var(--bg-body);
+}
+
+@media (min-width: 1024px) {
+  .main-content {
+    margin-bottom: 0;
+    overflow: hidden;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TOP HEADER — Mobile header / Desktop toolbar
+   ───────────────────────────────────────────────────────────────── */
+.top-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: var(--header-height);
+  padding: 0 var(--space-4);
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.top-header .header-left,
+.top-header .header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.top-header .header-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+/* Top-header siempre visible; sus hijos usan .mobile-only / .desktop-only
+   para mostrarse condicionalmente. Esto da simetría visual entre sidebar
+   (con brand arriba + user info abajo) y la barra superior (con título +
+   acciones). */
+
+/* ─────────────────────────────────────────────────────────────────
+   PAGE CONTENT — Scrollable area
+   ───────────────────────────────────────────────────────────────── */
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4);
+  /* Reservamos espacio inferior para que el FAB de "Primeros pasos"
+     no se sobreponga a botones Guardar/Crear al final de la página. */
+  padding-bottom: 96px;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (min-width: 768px) {
+  .page-content {
+    padding: var(--space-6);
+    padding-bottom: 96px;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   VIEW CONTAINERS — Por rol
+   ───────────────────────────────────────────────────────────────── */
+.view-container {
+  display: none;
+  animation: fadeIn var(--transition-base);
+}
+
+.view-container.active {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Cajero View: Minimalista, foco en velocidad */
+.view-cajero {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--gap-md);
+  height: 100%;
+  max-width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .view-cajero {
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-rows: 1fr auto;
+  }
+}
+
+/* Admin View: Dashboard completo */
+.view-admin {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-lg);
+}
+
+@media (min-width: 1024px) {
+  .view-admin {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: var(--gap-lg);
+  }
+  
+  .admin-col-full { grid-column: span 12; }
+  .admin-col-half { grid-column: span 6; }
+  .admin-col-third { grid-column: span 4; }
+  .admin-col-quarter { grid-column: span 3; }
+}

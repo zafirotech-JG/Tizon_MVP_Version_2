@@ -1,0 +1,480 @@
+/**
+ * core/tutorial-manager.js — Sistema de Tutorial Inteligente por Rol
+ * Usa Driver.js (CDN) para tours interactivos + FAQs contextuales
+ */
+
+// Configuración de tours por rol
+const TOURS = {
+  // ═════════════════════════════════════════════════════════════════
+  // CAJERO — Flujo minimalista, velocidad de venta
+  // ═════════════════════════════════════════════════════════════════
+  cajero: {
+    title: 'Bienvenido al POS Zafiro',
+    description: 'Aprende a vender en 3 pasos rápidos',
+    steps: [
+      {
+        element: '#search-productos',
+        popover: {
+          title: '1. Busca un producto',
+          description: 'Escribe el nombre o usa el escáner de código de barras para encontrar productos rápidamente.',
+          side: 'bottom',
+          align: 'start'
+        }
+      },
+      {
+        element: '#productos-grid',
+        popover: {
+          title: '2. Toca para agregar',
+          description: 'Toca cualquier producto para agregarlo al carrito. Toca varias veces para aumentar la cantidad.',
+          side: 'top',
+          align: 'center'
+        }
+      },
+      {
+        element: '#cajero-cart',
+        popover: {
+          title: '3. Cobra la venta',
+          description: 'Revisa el total y presiona "Cobrar". Elige el método de pago (efectivo, Nequi, tarjeta).',
+          side: 'left',
+          align: 'center'
+        }
+      },
+      {
+        element: '#btn-cobrar',
+        popover: {
+          title: '¡Listo para vender!',
+          description: 'Eso es todo. Prueba hacer tu primera venta de prueba ahora.',
+          side: 'top',
+          align: 'center'
+        }
+      }
+    ]
+  },
+  
+  // ═════════════════════════════════════════════════════════════════
+  // ADMIN / OWNER — Flujo completo de gestión
+  // ═════════════════════════════════════════════════════════════════
+  owner: {
+    title: 'Configura tu negocio en Zafiro',
+    description: 'Tour completo de administración',
+    steps: [
+      {
+        element: '[data-route="dashboard"]',
+        popover: {
+          title: 'Dashboard Principal',
+          description: 'Aquí ves el resumen de ventas, órdenes del día y métricas clave de tu negocio.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="pos"]',
+        popover: {
+          title: 'Modo Venta',
+          description: 'Usa esta vista para vender directamente, igual que tus cajeros.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="inventario"]',
+        popover: {
+          title: 'Gestiona tu Inventario',
+          description: 'Agrega productos, categorías y controla el stock de cada sucursal.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="usuarios"]',
+        popover: {
+          title: 'Tu Equipo',
+          description: 'Invita a cajeros, managers y encargados de inventario. Cada uno tendrá acceso según su rol.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="reportes"]',
+        popover: {
+          title: 'Reportes Detallados',
+          description: 'Analiza ventas por período, productos más vendidos y cierra caja diariamente.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="config"]',
+        popover: {
+          title: 'Personaliza tu Marca',
+          description: 'Cambia colores, sube tu logo y configura el nombre de tu negocio para el POS.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '.brand-anchor',
+        popover: {
+          title: 'Soporte Zafiro',
+          description: '¿Necesitas ayuda? Haz clic en "Powered by Zafiro" para contactar soporte o ver documentación.',
+          side: 'top',
+          align: 'center'
+        }
+      }
+    ]
+  },
+  
+  // ═════════════════════════════════════════════════════════════════
+  // MANAGER — Flujo intermedio
+  // ═════════════════════════════════════════════════════════════════
+  manager: {
+    title: 'Panel de Gerente',
+    description: 'Gestiona operaciones diarias',
+    steps: [
+      {
+        element: '[data-route="dashboard"]',
+        popover: {
+          title: 'Vista General',
+          description: 'Revisa las ventas del día y el desempeño de tu sucursal.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="inventario"]',
+        popover: {
+          title: 'Control de Stock',
+          description: 'Verifica inventario y reporta productos agotados.',
+          side: 'right',
+          align: 'start'
+        }
+      },
+      {
+        element: '[data-route="usuarios"]',
+        popover: {
+          title: 'Gestión de Cajeros',
+          description: 'Administra los cajeros de tu turno y revisa sus ventas.',
+          side: 'right',
+          align: 'start'
+        }
+      }
+    ]
+  }
+};
+
+// FAQs por vista y rol
+const FAQS = {
+  global: [
+    {
+      q: '¿Cómo cambio mi contraseña?',
+      a: 'Ve a Configuración → Perfil → Cambiar contraseña.',
+      roles: ['owner', 'manager', 'cajero']
+    },
+    {
+      q: '¿Qué hago si se corta el internet?',
+      a: 'El sistema guarda datos localmente. Cuando vuelva la conexión, se sincronizarán automáticamente.',
+      roles: ['owner', 'manager', 'cajero']
+    },
+    {
+      q: '¿Cómo contacto a soporte?',
+      a: 'Haz clic en "Powered by Zafiro" en el menú lateral o escribe a soporte@zafiro.co',
+      roles: ['owner', 'manager', 'cajero']
+    }
+  ],
+  
+  cajero: [
+    {
+      q: '¿Cómo aplico un descuento?',
+      a: 'En el carrito, desliza el producto hacia la izquierda y presiona "Descuento". Necesitarás PIN de manager.',
+      roles: ['cajero']
+    },
+    {
+      q: '¿Cómo anulo una venta?',
+      a: 'Ve a Órdenes → busca la orden → presiona "Anular". Requiere autorización de manager.',
+      roles: ['cajero']
+    },
+    {
+      q: '¿Puedo ver mi cierre de caja?',
+      a: 'Al finalizar tu turno, ve a Perfil → "Cerrar turno" para ver tu resumen de ventas.',
+      roles: ['cajero']
+    },
+    {
+      q: '¿Cómo cobro con Nequi/Daviplata?',
+      a: 'En la pantalla de cobro, selecciona "Transferencia" → elige la app → confirma el pago recibido.',
+      roles: ['cajero']
+    }
+  ],
+  
+  admin: [
+    {
+      q: '¿Cómo agrego un nuevo producto?',
+      a: 'Inventario → "+ Nuevo Producto". Completa nombre, precio, categoría y sucursal.',
+      roles: ['owner', 'manager']
+    },
+    {
+      q: '¿Cómo invito a un empleado?',
+      a: 'Equipo → "+ Invitar". Ingresa su email y asigna un rol (cajero, manager o inventario).',
+      roles: ['owner', 'manager']
+    },
+    {
+      q: '¿Cómo veo reportes de ventas?',
+      a: 'Reportes → selecciona el rango de fechas. Puedes exportar a Excel o PDF.',
+      roles: ['owner', 'manager']
+    },
+    {
+      q: '¿Cómo cierro caja al final del día?',
+      a: 'Reportes → "Cierre de caja". Revisa el total y confirma para generar el informe.',
+      roles: ['owner', 'manager']
+    },
+    {
+      q: '¿Puedo cambiar los colores del POS?',
+      a: 'Sí, ve a Ajustes → Apariencia. Personaliza colores, logo y tipografía de tu marca.',
+      roles: ['owner']
+    },
+    {
+      q: '¿Cómo agrego una nueva sucursal?',
+      a: 'Ajustes → Sucursales → "+ Nueva sucursal". Asigna un nombre y dirección.',
+      roles: ['owner']
+    }
+  ]
+};
+
+let driverInstance = null;
+
+/**
+ * Inicia el tutorial según el rol del usuario
+ * @param {string} rol - 'owner', 'manager', 'cajero', etc.
+ */
+function startTutorial(rol) {
+  // Determinar qué tour mostrar
+  let tourConfig = TOURS.cajero;
+  
+  if (rol === 'owner' || rol === 'super_admin') {
+    tourConfig = TOURS.owner;
+  } else if (rol === 'manager') {
+    tourConfig = TOURS.manager;
+  }
+  
+  // Verificar si ya se completó el tutorial
+  const tutorialCompleted = localStorage.getItem(`tutorial_completed_${rol}`);
+  if (tutorialCompleted) {
+    console.log(`[Tutorial] Ya completado para rol: ${rol}`);
+    return;
+  }
+  
+  // Inicializar Driver.js
+  if (typeof window.driver === 'undefined') {
+    console.error('[Tutorial] Driver.js no cargado');
+    showToast('Cargando tutorial...', 'info');
+    return;
+  }
+  
+  const driver = window.driver.js.driver;
+  
+  driverInstance = driver({
+    showProgress: true,
+    showButtons: ['next', 'previous', 'close'],
+    allowClose: true,
+    overlayClickNext: false,
+    stagePadding: 4,
+    popoverClass: 'zafiro-driver-theme',
+    steps: tourConfig.steps,
+    onDestroyStarted: () => {
+      if (!driverInstance.hasNextStep()) {
+        // Último paso completado
+        completeTutorial(rol);
+      }
+      driverInstance.destroy();
+    }
+  });
+  
+  // Iniciar con delay para asegurar que DOM esté listo
+  setTimeout(() => {
+    driverInstance.drive();
+  }, 500);
+}
+
+/**
+ * Marca el tutorial como completado
+ */
+function completeTutorial(rol) {
+  localStorage.setItem(`tutorial_completed_${rol}`, 'true');
+  localStorage.setItem(`tutorial_completed_at_${rol}`, new Date().toISOString());
+  
+  showToast('¡Tutorial completado! 🎉', 'success');
+  
+  // Llamar API para marcar en backend (opcional)
+  try {
+    const token = localStorage.getItem('zafiro_token');
+    if (token) {
+      fetch('/api/v3/onboarding/tutorial', {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ completado: true })
+      });
+    }
+  } catch (e) {
+    // Silenciar errores de red
+  }
+}
+
+/**
+ * Reinicia el tutorial (para testing o "Ver de nuevo")
+ */
+function resetTutorial(rol) {
+  localStorage.removeItem(`tutorial_completed_${rol}`);
+  localStorage.removeItem(`tutorial_completed_at_${rol}`);
+  startTutorial(rol);
+}
+
+/**
+ * Muestra el panel de FAQs
+ * @param {string} rol - Rol del usuario
+ * @param {string} contexto - 'global', 'pos', 'inventario', etc.
+ */
+function showFAQ(rol, contexto = 'global') {
+  const panel = document.getElementById('faq-panel');
+  if (!panel) return;
+  
+  // Filtrar FAQs por rol y contexto
+  let faqs = [];
+  
+  // FAQs globales aplicables al rol
+  if (FAQS.global) {
+    faqs = faqs.concat(FAQS.global.filter(f => f.roles.includes(rol)));
+  }
+  
+  // FAQs específicas del contexto
+  const contextKey = rol === 'cajero' ? 'cajero' : 'admin';
+  if (FAQS[contextKey]) {
+    faqs = faqs.concat(FAQS[contextKey].filter(f => f.roles.includes(rol)));
+  }
+  
+  // Renderizar panel
+  panel.innerHTML = `
+    <div class="faq-overlay" onclick="closeFAQ()"></div>
+    <div class="faq-container">
+      <div class="faq-header">
+        <h3><i class="ph ph-question"></i> Preguntas Frecuentes</h3>
+        <button class="btn-icon" onclick="closeFAQ()"><i class="ph ph-x"></i></button>
+      </div>
+      <div class="faq-content">
+        ${faqs.length === 0 ? '<p class="text-secondary">No hay FAQs disponibles.</p>' : ''}
+        ${faqs.map((faq, idx) => `
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFAQ(${idx})">
+              <span>${faq.q}</span>
+              <i class="ph ph-caret-down" id="faq-icon-${idx}"></i>
+            </button>
+            <div class="faq-answer" id="faq-answer-${idx}" style="display: none;">
+              <p>${faq.a}</p>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="faq-footer">
+        <button class="btn btn-ghost btn-sm" onclick="startTutorial('${rol}')">
+          <i class="ph ph-play-circle"></i> Ver tutorial de nuevo
+        </button>
+        <a href="https://zafiro.co/soporte" target="_blank" class="btn btn-zafiro btn-sm">
+          <i class="ph ph-chat-circle"></i> Contactar soporte
+        </a>
+      </div>
+    </div>
+  `;
+  
+  panel.classList.remove('hidden');
+  
+  // Animación de entrada
+  setTimeout(() => {
+    panel.querySelector('.faq-container').classList.add('active');
+  }, 10);
+}
+
+/**
+ * Cierra el panel de FAQs
+ */
+function closeFAQ() {
+  const panel = document.getElementById('faq-panel');
+  if (!panel) return;
+  
+  panel.querySelector('.faq-container').classList.remove('active');
+  setTimeout(() => {
+    panel.classList.add('hidden');
+  }, 300);
+}
+
+/**
+ * Toggle individual FAQ item
+ */
+function toggleFAQ(idx) {
+  const answer = document.getElementById(`faq-answer-${idx}`);
+  const icon = document.getElementById(`faq-icon-${idx}`);
+  
+  if (answer.style.display === 'none') {
+    answer.style.display = 'block';
+    icon.classList.replace('ph-caret-down', 'ph-caret-up');
+  } else {
+    answer.style.display = 'none';
+    icon.classList.replace('ph-caret-up', 'ph-caret-down');
+  }
+}
+
+/**
+ * Muestra un toast notification
+ */
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.innerHTML = `
+    <i class="ph ${type === 'success' ? 'ph-check-circle' : type === 'error' ? 'ph-warning-circle' : 'ph-info'}"></i>
+    <span>${message}</span>
+  `;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => toast.classList.add('show'), 10);
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// Auto-iniciar tutorial si es primera vez
+document.addEventListener('DOMContentLoaded', () => {
+  // Verificar si hay usuario logueado
+  const token = localStorage.getItem('zafiro_token');
+  if (!token) return;
+  
+  // Obtener rol del usuario (del token o localStorage)
+  let user = null;
+  try {
+    const userStr = localStorage.getItem('zafiro_user');
+    if (userStr) user = JSON.parse(userStr);
+  } catch (e) {
+    console.error('[Tutorial] Error parsing user:', e);
+  }
+  
+  if (user?.rol) {
+    const tutorialCompleted = localStorage.getItem(`tutorial_completed_${user.rol}`);
+    if (!tutorialCompleted) {
+      // Delay para dejar que la UI cargue
+      setTimeout(() => {
+        startTutorial(user.rol);
+      }, 1000);
+    }
+  }
+});
+
+// Exports
+export { startTutorial, resetTutorial, showFAQ, closeFAQ, completeTutorial };
+
+// Globals para onclick handlers
+window.closeFAQ = closeFAQ;
+window.toggleFAQ = toggleFAQ;

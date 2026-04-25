@@ -1,610 +1,241 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f0d0b" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  
+  <title>Zafiro POS — Sistema de Punto de Venta</title>
+  <meta name="description" content="Zafiro POS v3 — Sistema white-label multi-tenant para restaurantes y retail">
+  
+  <!-- Favicon -->
   <link rel="icon" href="/assets/zafiro-gem-icon.svg" type="image/svg+xml">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>Zafiro — POS Inteligente</title>
-  <meta name="description" content="Zafiro — Sistema de punto de venta white-label para tu negocio" />
-  <link rel="stylesheet" href="css/styles.css" />
-  <link rel="stylesheet" href="css/refinements.css" />
-  <link rel="stylesheet" href="css/zafiro-brand.css" />
-  <link rel="stylesheet" href="css/onboarding.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shepherd.js@11/dist/css/shepherd.css"/>
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css" />
+  <link rel="apple-touch-icon" href="/assets/zafiro-logo.svg">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/shepherd.js@11/dist/js/shepherd.min.js"></script>
-</head>
-
-<body>
-
-  <div class="app-shell">
-
-    <!-- ══ TOP BAR (mobile only) ══ -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <span class="topbar-logo"><img src="/assets/zafiro-gem-icon.svg" width="20" height="20" alt=""> <span id="topbar-tenant-name">Zafiro POS</span></span>
-        <select id="selector-sucursal-mobile" class="select-sucursal-mobile" title="Sucursal activa"></select>
-      </div>
-      <button class="btn-icon" id="btn-logout-mobile"
-        style="font-size:1.2rem; border:none;" title="Cerrar Sesión"><i class="ph ph-sign-out icon-sm"></i></button>
-    </header>
-
-    <!-- ══ SIDEBAR (desktop only) ══ -->
-    <aside class="sidebar">
-      <div class="sidebar-logo" style="display:flex; align-items:center; gap:10px;">
-        <img id="logo-tenant" src="/assets/zafiro-logo.svg" alt="Zafiro" style="height:36px; width:auto;">
-        <div>
-          <h1 id="tenant-name" style="font-size:1.1rem; margin:0;">Zafiro POS</h1>
-          <p style="margin:0; font-size:0.75rem; color:var(--text-muted);">v3.0</p>
-        </div>
-      </div>
-
-      <!-- Selector de sucursal -->
-      <div class="sucursal-selector">
-        <label class="sucursal-label">Sucursal activa</label>
-        <div class="sucursal-selector-row">
-          <select id="selector-sucursal" class="select-sucursal"></select>
-          <button id="btn-gestionar-sucursales" class="btn-sucursal-settings" title="Gestionar sucursales"><i class="ph ph-gear icon-sm"></i></button>
-        </div>
-        <button id="btn-nueva-sucursal" class="btn btn-ghost btn-nueva-suc">+ Nueva sucursal</button>
-      </div>
-
-      <nav>
-        <div class="nav-item" data-seccion="pos" data-tour="venta">
-          <span class="icon"><i class="ph ph-shopping-cart"></i></span><span>Punto de Venta</span>
-        </div>
-        <div class="nav-item" data-seccion="inventario" data-tour="producto">
-          <span class="icon"><i class="ph ph-package"></i></span><span>Inventario</span>
-        </div>
-        <div class="nav-item" data-seccion="dashboard">
-          <span class="icon"><i class="ph ph-squares-four"></i></span><span>Dashboard</span>
-        </div>
-        <div class="nav-item" data-seccion="admin" style="display:none;">
-          <span class="icon"><i class="ph ph-shield-check"></i></span><span>Admin</span>
-        </div>
-      </nav>
-      <div style="margin-top:auto; padding:16px 20px;">
-        <button class="btn btn-ghost" id="btn-logout-desktop" style="width:100%; margin-bottom:12px;"><i class="ph ph-sign-out icon-sm"></i> Salir</button>
-        <a href="https://zafiro.co" target="_blank" class="zafiro-brand-anchor" style="width:100%; justify-content:center;">
-          <img src="/assets/zafiro-gem-icon.svg" width="14" height="14" alt="">
-          Powered by Zafiro
-        </a>
-      </div>
-    </aside>
-
-    <!-- ══ MAIN ══ -->
-    <main class="main">
-
-      <!-- ─── POS ─── -->
-      <section id="seccion-pos" class="section">
-        <div class="section-header">
-          <h2 class="section-title">Punto de Venta</h2>
-          <!-- Botón solo visible en mobile para abrir panel del pedido -->
-          <button class="btn btn-primary btn-cart-toggle" id="btn-cart-toggle" type="button">
-            <i class="ph ph-shopping-cart icon-sm"></i> Pedido <span class="cart-badge" id="cart-badge">0</span>
-          </button>
-        </div>
-
-        <!-- Split layout: catálogo izquierda + panel pedido derecha -->
-        <div class="pos-split">
-
-          <!-- ── CATÁLOGO CON TABS ── -->
-          <div class="catalogo-panel">
-            <div class="catalogo-search">
-              <div class="search-icon-wrap">
-                <i class="ph ph-magnifying-glass icon-sm"></i>
-                <input type="text" id="buscar-producto" class="input-buscar" placeholder="Buscar producto…" autocomplete="off" />
-              </div>
-            </div>
-            <!-- Tabs de categorías (se renderizan dinámicamente) -->
-            <div class="category-tabs" id="category-tabs"></div>
-            <!-- Grilla de productos de la categoría activa -->
-            <div id="grilla-productos" class="grilla-productos">
-              <p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1">Cargando productos…</p>
-            </div>
-          </div>
-
-          <!-- ── PANEL DEL PEDIDO ── -->
-          <div id="panel-carrito" class="panel-carrito">
-            <div class="panel-handle"></div>
-            <div class="carrito-header">
-              <h3><i class="ph ph-shopping-cart icon-sm"></i> Pedido</h3>
-              <button class="btn-icon btn-cerrar-carrito" id="btn-cerrar-carrito" type="button" title="Cerrar"><i class="ph ph-x icon-sm"></i></button>
-            </div>
-
-            <div id="carrito-items" class="carrito-items">
-              <div class="carrito-vacio">
-                <span class="carrito-vacio-icon"><i class="ph ph-shopping-cart" style="font-size: 48px"></i></span>
-                <p>Pedido vacío</p>
-                <span>Selecciona productos del catálogo</span>
-              </div>
-            </div>
-
-            <div class="domicilio-toggle">
-              <div class="domicilio-info">
-                <span class="domicilio-label"><i class="ph ph-bicycle icon-sm"></i> Envío a Domicilio</span>
-                <span class="domicilio-desc">+ $1.000 por cada unidad</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" id="toggle-domicilio" />
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="carrito-totales">
-              <div class="resumen-item">
-                <span class="resumen-label">Subtotal</span>
-                <span class="resumen-valor" id="carrito-subtotal">$0</span>
-              </div>
-              <div class="resumen-item" id="fila-domicilio" style="display:none;">
-                <span class="resumen-label"><i class="ph ph-bicycle icon-sm"></i> Domicilio</span>
-                <span class="resumen-valor" id="carrito-domicilio">$0</span>
-              </div>
-              <div class="resumen-item resumen-total">
-                <span class="resumen-label">Total</span>
-                <span class="resumen-valor" id="carrito-total">$0</span>
-              </div>
-            </div>
-
-            <!-- Método de pago inline en el panel -->
-            <div class="pago-inline" id="pago-inline" style="display:none">
-              <p class="pago-inline-title">Método de Pago</p>
-              <div class="pago-pills" id="pago-pills-inline">
-                <button class="pago-pill" data-valor="Efectivo" type="button"><i class="ph ph-money icon-sm"></i> Efectivo</button>
-                <button class="pago-pill" data-valor="Nequi" type="button"><i class="ph ph-device-mobile icon-sm"></i> Nequi</button>
-                <button class="pago-pill" data-valor="Daviplata" type="button"><i class="ph ph-device-mobile icon-sm"></i> Daviplata</button>
-                <button class="pago-pill" data-valor="Tarjeta" type="button"><i class="ph ph-credit-card icon-sm"></i> Tarjeta</button>
-              </div>
-              <div class="form-group pago-efectivo-group" id="pago-efectivo-group-inline" style="display:none;">
-                <label for="pago-recibido-inline">Dinero Recibido (COP)</label>
-                <input type="number" id="pago-recibido-inline" placeholder="Ej: 50000" min="0" step="100" inputmode="numeric" />
-                <div class="pago-cambio" id="pago-cambio-wrap-inline" style="display:none;">
-                  <span class="pago-cambio-label">Cambio:</span>
-                  <span class="pago-cambio-valor" id="pago-cambio-inline">$0</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="carrito-actions">
-              <button class="btn btn-cobrar" id="btn-cobrar" type="button" disabled>
-                <i class="ph ph-currency-circle-dollar icon-sm"></i> Cobrar
-              </button>
-              <button class="btn btn-primary btn-registrar-inline" id="btn-registrar-inline" type="button" disabled style="display:none">
-                <i class="ph ph-check-circle icon-sm"></i> Registrar Venta
-              </button>
-              <button class="btn btn-ghost btn-limpiar" id="btn-limpiar-carrito" type="button">
-                <i class="ph ph-trash icon-sm"></i> Vaciar
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <!-- ─── INVENTARIO ─── -->
-      <section id="seccion-inventario" class="section">
-        <div class="section-header">
-          <h2 class="section-title">Inventario / Menú</h2>
-          <button class="btn btn-primary" id="btn-nuevo-producto">+ Nuevo</button>
-        </div>
-
-        <!-- Gestión de categorías (solo admin) -->
-        <div id="seccion-categorias-admin" style="display:none;">
-          <p class="section-label"><i class="ph ph-tag icon-sm"></i> Gestionar Categorías</p>
-          <div class="cat-admin-lista" id="lista-categorias-admin"></div>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Categoría</th>
-                <th>Precio</th>
-                <th class="col-insumos">Insumos / Receta</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-productos-body">
-              <tr>
-                <td colspan="5" class="empty-cell">Cargando…</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ─── DASHBOARD ─── -->
-      <section id="seccion-dashboard" class="section">
-        <div class="section-header">
-          <h2 class="section-title">Dashboard</h2>
-          <div class="dashboard-filter">
-            <input type="date" id="dashboard-fecha" />
-            <button class="btn btn-primary" id="btn-cargar-reporte">Cargar</button>
-          </div>
-        </div>
-
-        <div>
-          <p class="section-label">Cierre de Caja</p>
-          <div class="resumen-grid">
-            <div class="metric-card highlight">
-              <span class="metric-label"><i class="ph ph-currency-circle-dollar icon-sm"></i> Total del Día</span>
-              <span class="metric-value" id="resumen-total">—</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label"><i class="ph ph-money icon-sm"></i> Efectivo</span>
-              <span class="metric-value" id="resumen-efectivo">—</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label"><i class="ph ph-device-mobile icon-sm"></i> Nequi</span>
-              <span class="metric-value" id="resumen-nequi">—</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label"><i class="ph ph-device-mobile icon-sm"></i> Daviplata</span>
-              <span class="metric-value" id="resumen-daviplata">—</span>
-            </div>
-            <div class="metric-card">
-              <span class="metric-label"><i class="ph ph-credit-card icon-sm"></i> Tarjeta</span>
-              <span class="metric-value" id="resumen-tarjeta">—</span>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <p class="section-label">Productos más vendidos</p>
-          <div class="card" style="padding: 16px;">
-            <canvas id="chart-productos-mas-vendidos" style="display:none; max-height:280px;"></canvas>
-            <p id="chart-empty-msg" style="color:var(--text-muted);font-size:0.88rem;display:none;">Sin datos para graficar.</p>
-          </div>
-        </div>
-
-        <div>
-          <p class="section-label">Detalle por Producto</p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th class="text-center">Cant.</th>
-                  <th class="text-right">Total Ingresos</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-reporte-body">
-                <tr>
-                  <td colspan="3" class="empty-cell">Selecciona una fecha y carga el reporte</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Historial detallado de ventas (solo para admin) -->
-        <div id="seccion-historial-ventas" style="display:none;">
-          <p class="section-label"><i class="ph ph-list icon-sm"></i> Historial de Transacciones <span style="font-size:0.75rem;color:var(--accent);font-weight:700;margin-left:6px;">ADMIN</span></p>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Hora</th>
-                  <th>Producto</th>
-                  <th class="text-center">Cant.</th>
-                  <th class="text-right">Total</th>
-                  <th class="text-center">Método</th>
-                  <th class="text-center">Acción</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-ventas-historial-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-      </section>
-
-      <!-- ─── ADMIN ─── -->
-      <section id="seccion-admin" class="section">
-        <div class="section-header">
-          <h2 class="section-title"><i class="ph ph-shield-check icon-sm"></i> Panel de Administración</h2>
-          <button class="btn btn-ghost" id="btn-admin-refresh"><i class="ph ph-arrows-clockwise icon-sm"></i> Actualizar</button>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Negocio</th>
-                <th>Plan</th>
-                <th>Estado</th>
-                <th>Vencimiento</th>
-                <th>Registrado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-admin-body">
-              <tr><td colspan="6" class="empty-cell">Cargando tenants…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-    </main>
-
-    <!-- ══ BOTTOM NAV (mobile only) ══ -->
-    <nav class="bottom-nav">
-      <div class="nav-item" data-seccion="pos">
-        <span class="icon"><i class="ph ph-shopping-cart"></i></span><span>Caja</span>
-      </div>
-      <div class="nav-item" data-seccion="inventario">
-        <span class="icon"><i class="ph ph-package"></i></span><span>Menú</span>
-      </div>
-      <div class="nav-item" data-seccion="dashboard">
-        <span class="icon"><i class="ph ph-squares-four"></i></span><span>Reportes</span>
-      </div>
-      <div class="nav-item" data-seccion="admin" style="display:none;">
-        <span class="icon"><i class="ph ph-shield-check"></i></span><span>Admin</span>
-      </div>
-    </nav>
-
-  </div><!-- /.app-shell -->
-
-  <!-- ══ BACKDROP carrito (mobile) ══ -->
-  <div id="panel-backdrop" class="panel-backdrop"></div>
-
-  <!-- ══ MODAL: PRODUCTO ══ -->
-  <div id="modal-producto" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <h3 class="modal-title" id="modal-titulo">Nuevo Producto</h3>
-
-      <div class="form-group">
-        <label for="form-producto-nombre">Nombre del Producto *</label>
-        <input type="text" id="form-producto-nombre" placeholder="Ej: Costilla BBQ" autocomplete="off" />
-      </div>
-
-      <div class="form-group">
-        <label for="form-producto-precio">Precio de Venta (COP) *</label>
-        <input type="number" id="form-producto-precio" placeholder="Ej: 25000" min="0" step="500" inputmode="numeric" />
-      </div>
-
-      <div class="form-group">
-        <label for="form-producto-insumos">Insumos / Receta</label>
-        <textarea id="form-producto-insumos" rows="3"
-          placeholder="Ej: 500g costilla, salsa BBQ, papa criolla…"></textarea>
-      </div>
-
-      <div class="form-group">
-        <label for="form-producto-categoria">Categoría *</label>
-        <select id="form-producto-categoria">
-          <option value="">Selecciona una categoría</option>
-          <option value="__nueva__">+ Crear nueva categoría</option>
-        </select>
-      </div>
-
-      <div class="form-group" id="form-categoria-nueva-wrap" style="display:none;">
-        <label for="form-categoria-nueva">Nueva Categoría</label>
-        <input type="text" id="form-categoria-nueva" placeholder="Ej: Bebidas, Combos, Entradas..." />
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" id="btn-cancelar-modal">Cancelar</button>
-        <button class="btn btn-primary" id="btn-guardar-producto">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-
-
-  <!-- ══ MODAL: SUCURSAL (crear/editar) ══ -->
-  <div id="modal-sucursal" class="modal-overlay">
-    <div class="modal modal-sucursal">
-      <div class="modal-handle"></div>
-      <h3 class="modal-title" id="modal-sucursal-titulo">Nueva Sucursal</h3>
-
-      <p id="aviso-primera-sucursal" class="sucursal-aviso" style="display:none;">
-        Para comenzar, crea tu primera sucursal.
-      </p>
-
-      <div class="form-group">
-        <label for="form-sucursal-nombre">Nombre de la Sucursal *</label>
-        <input type="text" id="form-sucursal-nombre" placeholder="Ej: Tizón Norte, Tizón Centro…" autocomplete="off" />
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" id="btn-cancelar-sucursal">Cancelar</button>
-        <button class="btn btn-primary" id="btn-guardar-sucursal">Guardar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ PANEL: GESTIÓN DE SUCURSALES ══ -->
-  <div id="panel-sucursales" class="modal-overlay">
-    <div class="modal modal-sucursal-panel">
-      <div class="modal-handle"></div>
-      <h3 class="modal-title"><i class="ph ph-gear icon-sm"></i> Gestionar Sucursales</h3>
-
-      <div id="lista-sucursales-admin" class="sucursales-admin-lista"></div>
-
-      <div class="modal-actions" style="margin-top:16px;">
-        <button class="btn btn-ghost" id="btn-cerrar-panel-sucursales">Cerrar</button>
-        <button class="btn btn-primary" id="btn-nueva-desde-panel">+ Nueva Sucursal</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ MODAL: BIENVENIDA / ONBOARDING ══ -->
-  <div id="modal-bienvenida" class="modal-overlay">
-    <div class="modal">
-      <div class="modal-handle"></div>
-      <h3 class="modal-title"><i class="ph ph-hand-waving icon-sm"></i> ¡Bienvenido a Zafiro!</h3>
-      <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:20px;">
-        Sigue estos 3 pasos para empezar a vender:
-      </p>
-
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:4px;">
-
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface-2,#1a1714);border-radius:10px;">
-          <span style="flex-shrink:0;width:32px;height:32px;background:var(--primary,#e25822);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:#fff;">1</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:0.92rem;">Crea tu primera sucursal</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Define el nombre de tu local o punto de venta</div>
-          </div>
-          <button class="btn btn-primary" id="btn-bienvenida-sucursal" style="flex-shrink:0;font-size:0.82rem;padding:6px 14px;">Crear</button>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface-2,#1a1714);border-radius:10px;">
-          <span style="flex-shrink:0;width:32px;height:32px;background:var(--surface-3,#2a2520);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:var(--text-muted);">2</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:0.92rem;">Agrega tus productos</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Carga el menú con precios y categorías</div>
-          </div>
-          <button class="btn btn-ghost" id="btn-bienvenida-inventario" style="flex-shrink:0;font-size:0.82rem;padding:6px 14px;">Ir →</button>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:12px;padding:14px;background:var(--surface-2,#1a1714);border-radius:10px;">
-          <span style="flex-shrink:0;width:32px;height:32px;background:var(--surface-3,#2a2520);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.9rem;color:var(--text-muted);">3</span>
-          <div style="flex:1;min-width:0;">
-            <div style="font-weight:600;font-size:0.92rem;">Registra tu primera venta</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">Ya tienes todo listo para cobrar</div>
-          </div>
-          <button class="btn btn-ghost" id="btn-bienvenida-pos" style="flex-shrink:0;font-size:0.82rem;padding:6px 14px;">Ir →</button>
-        </div>
-
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn btn-ghost" id="btn-cerrar-bienvenida">Ahora no</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ LOGIN OVERLAY ══ -->
-  <div id="login-overlay" class="login-overlay visible">
-    <div class="login-card">
-      <div class="login-logo">
-        <img src="/assets/zafiro-logo.svg" alt="Zafiro" style="height:72px; width:auto; margin-bottom:12px;">
-        <h1 style="color:var(--zafiro-blue-glow, #4a8aff);">Zafiro</h1>
-        <p>POS Inteligente para tu Negocio</p>
-      </div>
-
-      <form id="form-login" class="auth-form">
-        <h2 class="auth-title">Iniciar Sesión</h2>
-        <p class="auth-subtitle">Ingresa tus credenciales para acceder</p>
-
-        <div class="form-group">
-          <label for="login-username">Correo electrónico</label>
-          <div class="input-icon-wrap">
-            <i class="ph ph-envelope-simple"></i>
-            <input type="text" id="login-username" placeholder="tucorreo@ejemplo.com" autocomplete="username" />
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="login-password">Contraseña</label>
-          <div class="input-icon-wrap">
-            <i class="ph ph-lock-simple"></i>
-            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" />
-          </div>
-        </div>
-        <button type="submit" class="btn btn-primary btn-auth" id="btn-login">Iniciar Sesión</button>
-        <p class="auth-switch">
-          ¿No tienes cuenta?
-          <a id="link-ir-registro" href="#">Crear cuenta</a>
-        </p>
-      </form>
-
-      <form id="form-registro" class="auth-form hidden">
-        <h2 class="auth-title">Crear Cuenta</h2>
-        <p class="auth-subtitle">Registra tu negocio en Zafiro POS</p>
-
-        <div class="auth-form-grid">
-          <div class="form-group">
-            <label for="reg-nombre">Nombre del negocio *</label>
-            <div class="input-icon-wrap">
-              <i class="ph ph-storefront"></i>
-              <input type="text" id="reg-nombre" placeholder="Ej: Asadero El Tizón" autocomplete="organization" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="reg-propietario">Nombre del propietario</label>
-            <div class="input-icon-wrap">
-              <i class="ph ph-user"></i>
-              <input type="text" id="reg-propietario" placeholder="Nombre completo" autocomplete="name" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="reg-email">Correo electrónico *</label>
-            <div class="input-icon-wrap">
-              <i class="ph ph-envelope-simple"></i>
-              <input type="email" id="reg-email" placeholder="tucorreo@gmail.com" autocomplete="email" />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="reg-telefono">Teléfono de contacto</label>
-            <div class="input-icon-wrap">
-              <i class="ph ph-phone"></i>
-              <input type="tel" id="reg-telefono" placeholder="300 123 4567" autocomplete="tel" />
-            </div>
-          </div>
-          <div class="form-group form-group-full">
-            <label for="reg-password">Contraseña *</label>
-            <div class="input-icon-wrap">
-              <i class="ph ph-lock-simple"></i>
-              <input type="password" id="reg-password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-            </div>
-            <span class="field-hint">Usa al menos 6 caracteres para mayor seguridad</span>
-          </div>
-          <div class="form-group form-group-full">
-            <label for="reg-password-confirm">Confirmar contraseña *</label>
-            <div class="input-icon-wrap">
-              <i class="ph ph-lock-simple"></i>
-              <input type="password" id="reg-password-confirm" placeholder="Repite tu contraseña" autocomplete="new-password" />
-            </div>
-          </div>
-        </div>
-
-        <div class="auth-terms">
-          <label class="checkbox-wrap">
-            <input type="checkbox" id="reg-terms" />
-            <span>Acepto los <a href="#">términos y condiciones</a> del servicio</span>
-          </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-auth" id="btn-register">Crear cuenta</button>
-        <p class="auth-switch">
-          ¿Ya tienes cuenta?
-          <a id="link-ir-login" href="#">Inicia sesión</a>
-        </p>
-      </form>
-    </div>
-  </div>
-
-  <!-- ══ TOASTS ══ -->
-  <div id="toast-container"></div>
-
-  <!-- ══ FLOATING HELP BTN ══ -->
-  <button id="btn-tutorial-help" class="btn-help-float" title="Reiniciar Tutorial">
-    <i class="ph ph-question"></i>
-  </button>
-
-  <!-- ══ SCRIPTS ══ -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+  
+  <!-- Libraries CDN -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css"/>
   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
-  <script src="js/theme.js"></script>
-  <script src="js/onboarding.js"></script>
-  <script>
-    // Aplicar branding cacheado inmediatamente (evita FOUC)
-    if (window.ZafiroTheme) window.ZafiroTheme.aplicarBrandingLocal();
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  
+  <!-- CSS Principal -->
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body data-theme="dark">
+  <!-- App Container -->
+  <div id="app"></div>
+  
+  <!-- Loading State -->
+  <div id="loading-screen" class="loading-screen">
+    <div class="loading-content">
+      <img src="/assets/zafiro-logo.svg" alt="Zafiro" class="loading-logo">
+      <div class="loading-spinner" id="loading-spinner"></div>
+      <p class="loading-text" id="loading-text">Cargando Zafiro POS...</p>
+      <div id="loading-error" class="loading-error" hidden>
+        <p class="loading-error-msg">No pudimos iniciar la aplicación.</p>
+        <button class="loading-retry" onclick="location.reload()">Reintentar</button>
+        <button class="loading-logout" onclick="localStorage.clear(); location.href='/login.html';">Cerrar sesión</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- JavaScript Modular -->
+  <script type="module">
+    import { initAppShell } from './js/core/app-shell.js';
+    import { startTutorial } from './js/core/tutorial-manager.js';
+    import { ZafiroAPI, isAuthenticated, getStoredUser } from './js/core/api-client.js';
+    
+    async function initializeApp() {
+      const loadingText = document.querySelector('.loading-text');
+      
+      try {
+        // 1. Verificar autenticación
+        if (!isAuthenticated()) {
+          window.location.href = '/login.html';
+          return;
+        }
+        
+        loadingText.textContent = 'Verificando sesión...';
+        
+        // 2. Obtener datos reales del usuario desde API
+        let user;
+        try {
+          user = await ZafiroAPI.auth.me();
+          // Actualizar cache local con datos frescos
+          localStorage.setItem('zafiro_user', JSON.stringify(user));
+        } catch (e) {
+          // Fallback a datos locales si la API falla temporalmente
+          user = getStoredUser();
+          if (!user) {
+            window.location.href = '/login.html';
+            return;
+          }
+          console.warn('[Init] API /me falló, usando datos locales:', e.message);
+        }
+        
+        // 3. Obtener branding del tenant
+        loadingText.textContent = 'Cargando tu negocio...';
+        let branding = { nombre_comercial: 'Zafiro POS', color_primary: '#e25822', tema: 'dark' };
+        try {
+          branding = await ZafiroAPI.branding.get();
+        } catch (e) {
+          console.warn('[Init] Branding no disponible, usando defaults:', e.message);
+        }
+        
+        // 4. Aplicar tema dinámico del tenant
+        if (branding.tema) {
+          document.body.setAttribute('data-theme', branding.tema);
+        }
+        if (branding.color_primary) {
+          document.documentElement.style.setProperty('--tenant-primary', branding.color_primary);
+        }
+        if (branding.color_secondary) {
+          document.documentElement.style.setProperty('--tenant-secondary', branding.color_secondary);
+        }
+        if (branding.color_accent) {
+          document.documentElement.style.setProperty('--tenant-accent', branding.color_accent);
+        }
+        
+        // 5. Ocultar loading con transición suave
+        const loadingScreen = document.getElementById('loading-screen');
+        loadingScreen.style.opacity = '0';
+        setTimeout(() => {
+          loadingScreen.style.display = 'none';
+        }, 300);
+        
+        // 6. Inicializar el shell de la aplicación
+        initAppShell({
+          user: user,
+          tenant: { id: user.tenant_id, nombre: branding.nombre_comercial },
+          branding: branding
+        });
+        
+        // 7. Verificar onboarding (tutorial primera vez)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('onboarding') === 'true') {
+          setTimeout(() => startTutorial(user.rol), 1500);
+        }
+        
+      } catch (error) {
+        console.error('[Init] Error crítico:', error);
+        const spin = document.getElementById('loading-spinner');
+        const errBox = document.getElementById('loading-error');
+        const errMsg = errBox?.querySelector('.loading-error-msg');
+        if (spin) spin.style.display = 'none';
+        if (loadingText) loadingText.textContent = '';
+        if (errMsg) errMsg.textContent = error?.message || 'No pudimos iniciar la aplicación.';
+        if (errBox) errBox.hidden = false;
+      }
+    }
+    
+    // Iniciar cuando DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initializeApp);
+    } else {
+      initializeApp();
+    }
   </script>
-  <script type="module" src="js/app.js"></script>
+  
+  <!-- Loading Screen Styles (inline para carga instantánea) -->
+  <style>
+    .loading-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #0a0a0a;
+      transition: opacity 0.3s ease;
+    }
+    
+    .loading-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+    
+    .loading-logo {
+      width: 120px;
+      height: auto;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: #1e5fd9;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .loading-text {
+      color: #a3a3a3;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
 
+    .loading-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      max-width: 320px;
+      text-align: center;
+    }
+    .loading-error-msg {
+      color: #ef4444;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      margin: 0;
+    }
+    .loading-retry, .loading-logout {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.15s ease;
+      width: 200px;
+    }
+    .loading-retry {
+      background: #3b82f6;
+      color: white;
+      border-color: #3b82f6;
+    }
+    .loading-retry:hover { background: #2563eb; }
+    .loading-logout {
+      background: transparent;
+      color: #a3a3a3;
+    }
+    .loading-logout:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+  </style>
 </body>
-
 </html>

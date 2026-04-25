@@ -1,0 +1,424 @@
+/**
+ * core/app-shell.js — Sistema de Layout y Routing por Rol
+ * Mobile-First, Vanilla JS, Sin dependencias
+ */
+
+// Estado global de la aplicación
+const AppState = {
+  user: null,
+  tenant: null,
+  branding: null,
+  currentView: null,
+  sidebarCollapsed: false,
+  isOnline: navigator.onLine
+};
+
+/**
+ * Inicializa el shell de la aplicación
+ * @param {Object} config - Configuración inicial {user, tenant, branding}
+ */
+function initAppShell(config) {
+  AppState.user = config.user;
+  AppState.tenant = config.tenant;
+  AppState.branding = config.branding;
+  
+  renderLayout();
+  setupEventListeners();
+  loadInitialView();
+}
+
+/**
+ * Renderiza el layout base según el rol del usuario
+ */
+function renderLayout() {
+  const isAdmin = AppState.user?.rol === 'owner' || AppState.user?.rol === 'manager' || AppState.user?.es_admin;
+  const app = document.getElementById('app') || document.body;
+  
+  app.innerHTML = `
+    <div class="app-shell" id="app-shell">
+      ${renderSidebar(isAdmin)}
+      ${renderMainContent(isAdmin)}
+    </div>
+    
+    <!-- Modales y overlays globales -->
+    <div id="modal-overlay" class="modal-overlay hidden"></div>
+    <div id="toast-container" class="toast-container"></div>
+    <div id="faq-panel" class="faq-panel hidden"></div>
+  `;
+}
+
+/**
+ * Renderiza la sidebar según el rol
+ */
+function renderSidebar(isAdmin) {
+  const navItems = isAdmin ? getAdminNavItems() : getCajeroNavItems();
+  
+  return `
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <img src="/assets/zafiro-gem-icon.svg" alt="Zafiro" class="brand-logo">
+          <div class="brand-text">
+            <span class="brand-name">${AppState.branding?.nombre_comercial || 'Zafiro POS'}</span>
+            <span class="brand-tagline">${isAdmin ? 'Administración' : 'Punto de Venta'}</span>
+          </div>
+        </div>
+        <button class="sidebar-toggle desktop-only" id="sidebar-toggle" aria-label="Colapsar menú">
+          <i class="ph ph-caret-left"></i>
+        </button>
+      </div>
+      
+      <nav class="sidebar-nav" id="sidebar-nav">
+        ${navItems.map(item => `
+          <a href="#${item.route}" 
+             class="nav-item ${item.active ? 'active' : ''}" 
+             data-route="${item.route}"
+             data-tour="${item.tourTarget || ''}">
+            <i class="ph ${item.icon}"></i>
+            <span class="label">${item.label}</span>
+          </a>
+        `).join('')}
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-menu" id="user-menu">
+          <div class="user-avatar">${getInitials(AppState.user?.nombre || 'U')}</div>
+          <div class="user-info">
+            <span class="user-name">${AppState.user?.nombre || 'Usuario'}</span>
+            <span class="user-role">${AppState.user?.rol || 'cajero'}</span>
+          </div>
+        </div>
+        
+        <button class="btn btn-ghost btn-sm" id="btn-help">
+          <i class="ph ph-question"></i>
+          <span>Ayuda</span>
+        </button>
+        
+        <button class="btn btn-ghost btn-sm" id="btn-logout">
+          <i class="ph ph-sign-out"></i>
+          <span>Cerrar sesión</span>
+        </button>
+        
+        <a href="https://zafiro.co" target="_blank" class="brand-anchor">
+          <img src="/assets/zafiro-gem-icon.svg" alt="">
+          <span>Powered by Zafiro</span>
+        </a>
+      </div>
+    </aside>
+  `;
+}
+
+/**
+ * Renderiza el contenido principal
+ */
+function renderMainContent(isAdmin) {
+  return `
+    <main class="main-content">
+      <!-- Header móvil (solo en mobile) -->
+      <header class="top-header mobile-only">
+        <div class="header-left">
+          <img src="/assets/zafiro-gem-icon.svg" alt="" width="28" height="28">
+          <span class="header-title">${isAdmin ? 'Admin' : 'POS'}</span>
+        </div>
+        <div class="header-right">
+          <button class="btn-icon" id="btn-mobile-help" title="Ayuda">
+            <i class="ph ph-question"></i>
+          </button>
+        </div>
+      </header>
+      
+      <!-- Área de vistas -->
+      <div class="page-content" id="page-content">
+        ${isAdmin ? renderAdminViews() : renderCajeroViews()}
+      </div>
+    </main>
+    
+    <!-- FAB para acciones rápidas -->
+    ${isAdmin ? '' : `<button class="fab" id="fab-checkout" title="Ver carrito">
+      <i class="ph ph-shopping-cart"></i>
+    </button>`}
+  `;
+}
+
+/**
+ * Items de navegación para Admin
+ */
+function getAdminNavItems() {
+  return [
+    { route: 'dashboard', label: 'Dashboard', icon: 'ph-squares-four', tourTarget: 'dashboard' },
+    { route: 'pos', label: 'Vender', icon: 'ph-shopping-cart', tourTarget: 'pos-admin' },
+    { route: 'inventario', label: 'Inventario', icon: 'ph-package', tourTarget: 'inventario' },
+    { route: 'usuarios', label: 'Equipo', icon: 'ph-users', tourTarget: 'usuarios' },
+    { route: 'reportes', label: 'Reportes', icon: 'ph-chart-bar', tourTarget: 'reportes' },
+    { route: 'config', label: 'Ajustes', icon: 'ph-gear', tourTarget: 'config' }
+  ];
+}
+
+/**
+ * Items de navegación para Cajero
+ */
+function getCajeroNavItems() {
+  return [
+    { route: 'pos', label: 'Vender', icon: 'ph-shopping-cart', active: true, tourTarget: 'pos' },
+    { route: 'ordenes', label: 'Órdenes', icon: 'ph-receipt', tourTarget: 'ordenes' },
+    { route: 'perfil', label: 'Perfil', icon: 'ph-user', tourTarget: 'perfil' }
+  ];
+}
+
+/**
+ * Renderiza las vistas de Admin
+ */
+function renderAdminViews() {
+  return `
+    <!-- Dashboard -->
+    <section id="view-dashboard" class="view-container view-admin active">
+      <div class="admin-col-quarter">
+        <div class="stat-card success">
+          <div class="stat-icon"><i class="ph ph-currency-dollar"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="stat-ventas-hoy">$0</div>
+            <div class="stat-label">Ventas hoy</div>
+            <div class="stat-change positive"><i class="ph ph-trend-up"></i> 12%</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-col-quarter">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="ph ph-receipt"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="stat-ordenes-hoy">0</div>
+            <div class="stat-label">Órdenes hoy</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-col-quarter">
+        <div class="stat-card warning">
+          <div class="stat-icon"><i class="ph ph-package"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="stat-productos">0</div>
+            <div class="stat-label">Productos</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-col-quarter">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="ph ph-users"></i></div>
+          <div class="stat-content">
+            <div class="stat-value" id="stat-usuarios">0</div>
+            <div class="stat-label">Empleados</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-col-half">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Ventas de la semana</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="chart-ventas" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="admin-col-half">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">Productos más vendidos</h3>
+          </div>
+          <div class="card-body" id="top-productos">
+            <!-- Lista dinámica -->
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Otras vistas admin (lazy loaded) -->
+    <section id="view-pos" class="view-container view-admin">${renderPOSView()}</section>
+    <section id="view-inventario" class="view-container view-admin">${renderInventarioView()}</section>
+    <section id="view-usuarios" class="view-container view-admin">${renderUsuariosView()}</section>
+    <section id="view-reportes" class="view-container view-admin">${renderReportesView()}</section>
+    <section id="view-config" class="view-container view-admin">${renderConfigView()}</section>
+  `;
+}
+
+/**
+ * Renderiza las vistas de Cajero (minimalista, foco en velocidad)
+ */
+function renderCajeroViews() {
+  return `
+    <!-- POS View (única vista principal para cajero) -->
+    <section id="view-pos" class="view-container view-cajero active">
+      <!-- Búsqueda rápida -->
+      <div class="cajero-search">
+        <div class="search-box">
+          <i class="ph ph-magnifying-glass"></i>
+          <input type="text" id="search-productos" placeholder="Buscar producto..." autocomplete="off">
+          <button class="btn-icon btn-icon-sm" id="btn-scan">
+            <i class="ph ph-barcode"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Grid de productos -->
+      <div class="cajero-grid" id="productos-grid">
+        <!-- Productos renderizados dinámicamente -->
+        <div class="skeleton-grid">Cargando productos...</div>
+      </div>
+      
+      <!-- Panel de carrito (fixed bottom en mobile, sidebar en desktop) -->
+      <div class="cajero-cart" id="cajero-cart">
+        <div class="cart-header">
+          <span class="cart-title"><i class="ph ph-shopping-cart"></i> Carrito</span>
+          <span class="cart-count" id="cart-count">0 items</span>
+        </div>
+        <div class="cart-items" id="cart-items">
+          <div class="cart-empty">Toca un producto para agregar</div>
+        </div>
+        <div class="cart-footer">
+          <div class="cart-total">
+            <span>Total</span>
+            <span class="total-amount" id="cart-total">$0.00</span>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" id="btn-cobrar" disabled>
+            <i class="ph ph-currency-dollar"></i>
+            Cobrar
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Órdenes (historial) -->
+    <section id="view-ordenes" class="view-container">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Mis órdenes del día</h3>
+        </div>
+        <div class="card-body" id="ordenes-list">
+          <!-- Lista dinámica -->
+        </div>
+      </div>
+    </section>
+    
+    <!-- Perfil -->
+    <section id="view-perfil" class="view-container">
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="user-avatar" style="width: 80px; height: 80px; font-size: 2rem; margin: 0 auto;">
+            ${getInitials(AppState.user?.nombre || 'U')}
+          </div>
+          <h3 style="margin-top: var(--space-4);">${AppState.user?.nombre || 'Usuario'}</h3>
+          <p class="text-secondary">${AppState.user?.email || ''}</p>
+          <span class="badge badge-primary" style="margin-top: var(--space-2);">${AppState.user?.rol || 'cajero'}</span>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+/**
+ * Setup de event listeners
+ */
+function setupEventListeners() {
+  // Sidebar toggle
+  const toggle = document.getElementById('sidebar-toggle');
+  if (toggle) {
+    toggle.addEventListener('click', () => {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+      AppState.sidebarCollapsed = sidebar.classList.contains('collapsed');
+    });
+  }
+  
+  // Navegación
+  document.addEventListener('click', (e) => {
+    const navItem = e.target.closest('.nav-item');
+    if (navItem) {
+      e.preventDefault();
+      const route = navItem.dataset.route;
+      navigateTo(route);
+    }
+  });
+  
+  // Logout
+  const logoutBtn = document.getElementById('btn-logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
+  }
+  
+  // Ayuda
+  const helpBtn = document.getElementById('btn-help') || document.getElementById('btn-mobile-help');
+  if (helpBtn) {
+    helpBtn.addEventListener('click', () => {
+      import('./tutorial-manager.js').then(m => m.startTutorial(AppState.user?.rol));
+    });
+  }
+  
+  // Network status
+  window.addEventListener('online', () => { AppState.isOnline = true; });
+  window.addEventListener('offline', () => { AppState.isOnline = false; });
+}
+
+/**
+ * Navegación entre vistas
+ */
+function navigateTo(route) {
+  // Actualizar nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.toggle('active', item.dataset.route === route);
+  });
+  
+  // Mostrar vista correspondiente
+  document.querySelectorAll('.view-container').forEach(view => {
+    view.classList.remove('active');
+  });
+  
+  const targetView = document.getElementById(`view-${route}`);
+  if (targetView) {
+    targetView.classList.add('active');
+    AppState.currentView = route;
+  }
+  
+  // Actualizar URL hash sin recargar
+  window.location.hash = route;
+}
+
+/**
+ * Carga la vista inicial según el hash o default
+ */
+function loadInitialView() {
+  const hash = window.location.hash.slice(1) || 'dashboard';
+  const isAdmin = AppState.user?.rol === 'owner' || AppState.user?.rol === 'manager';
+  const defaultRoute = isAdmin ? 'dashboard' : 'pos';
+  
+  navigateTo(hash || defaultRoute);
+}
+
+/**
+ * Logout handler
+ */
+function handleLogout() {
+  localStorage.removeItem('zafiro_token');
+  localStorage.removeItem('zafiro_refresh');
+  window.location.href = '/login.html';
+}
+
+/**
+ * Helpers
+ */
+function getInitials(name) {
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+}
+
+// Placeholders para vistas (se implementan en módulos separados)
+function renderPOSView() { return '<div class="p-4">Vista POS compartida</div>'; }
+function renderInventarioView() { return '<div class="p-4">Vista Inventario</div>'; }
+function renderUsuariosView() { return '<div class="p-4">Vista Usuarios</div>'; }
+function renderReportesView() { return '<div class="p-4">Vista Reportes</div>'; }
+function renderConfigView() { return '<div class="p-4">Vista Configuración</div>'; }
+
+// Exports
+export { initAppShell, AppState, navigateTo };

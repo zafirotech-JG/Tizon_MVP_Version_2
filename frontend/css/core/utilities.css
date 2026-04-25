@@ -1,0 +1,261 @@
+/**
+ * core/utilities.css — Utility Classes Mobile-First
+ */
+
+/* ─────────────────────────────────────────────────────────────────
+   DISPLAY
+   ───────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+.block { display: block; }
+.inline { display: inline; }
+.inline-block { display: inline-block; }
+.flex { display: flex; }
+.grid { display: grid; }
+
+/* ─────────────────────────────────────────────────────────────────
+   FLEXBOX
+   ───────────────────────────────────────────────────────────────── */
+.flex-row { flex-direction: row; }
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-nowrap { flex-wrap: nowrap; }
+
+.items-start { align-items: flex-start; }
+.items-center { align-items: center; }
+.items-end { align-items: flex-end; }
+.items-stretch { align-items: stretch; }
+
+.justify-start { justify-content: flex-start; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+.justify-evenly { justify-content: space-evenly; }
+
+.flex-1 { flex: 1 1 0%; }
+.flex-auto { flex: 1 1 auto; }
+.flex-none { flex: none; }
+.flex-shrink-0 { flex-shrink: 0; }
+.flex-grow { flex-grow: 1; }
+
+.gap-xs { gap: var(--gap-xs); }
+.gap-sm { gap: var(--gap-sm); }
+.gap-md { gap: var(--gap-md); }
+.gap-lg { gap: var(--gap-lg); }
+.gap-xl { gap: var(--gap-xl); }
+
+/* ─────────────────────────────────────────────────────────────────
+   GRID
+   ───────────────────────────────────────────────────────────────── */
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (min-width: 480px) {
+  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sm\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (min-width: 768px) {
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .md\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .md\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lg\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .lg\:grid-cols-6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   SPACING (Padding)
+   ───────────────────────────────────────────────────────────────── */
+.p-0 { padding: 0; }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.p-5 { padding: var(--space-5); }
+.p-6 { padding: var(--space-6); }
+
+.px-2 { padding-left: var(--space-2); padding-right: var(--space-2); }
+.px-3 { padding-left: var(--space-3); padding-right: var(--space-3); }
+.px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
+
+.py-2 { padding-top: var(--space-2); padding-bottom: var(--space-2); }
+.py-3 { padding-top: var(--space-3); padding-bottom: var(--space-3); }
+.py-4 { padding-top: var(--space-4); padding-bottom: var(--space-4); }
+
+.pt-4 { padding-top: var(--space-4); }
+.pb-4 { padding-bottom: var(--space-4); }
+.pl-4 { padding-left: var(--space-4); }
+.pr-4 { padding-right: var(--space-4); }
+
+/* ─────────────────────────────────────────────────────────────────
+   SPACING (Margin)
+   ───────────────────────────────────────────────────────────────── */
+.m-0 { margin: 0; }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-auto { margin: auto; }
+
+.mx-auto { margin-left: auto; margin-right: auto; }
+.my-auto { margin-top: auto; margin-bottom: auto; }
+
+.mb-1 { margin-bottom: var(--space-1); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-3 { margin-bottom: var(--space-3); }
+.mb-4 { margin-bottom: var(--space-4); }
+
+.mt-2 { margin-top: var(--space-2); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+
+/* ─────────────────────────────────────────────────────────────────
+   TYPOGRAPHY
+   ───────────────────────────────────────────────────────────────── */
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-3xl { font-size: var(--text-3xl); }
+
+.font-normal { font-weight: var(--font-normal); }
+.font-medium { font-weight: var(--font-medium); }
+.font-semibold { font-weight: var(--font-semibold); }
+.font-bold { font-weight: var(--font-bold); }
+
+.leading-tight { line-height: var(--leading-tight); }
+.leading-normal { line-height: var(--leading-normal); }
+.leading-relaxed { line-height: var(--leading-relaxed); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-disabled { color: var(--text-disabled); }
+.text-accent { color: var(--tenant-primary); }
+.text-success { color: var(--success); }
+.text-warning { color: var(--warning); }
+.text-error { color: var(--error); }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   VISUAL
+   ───────────────────────────────────────────────────────────────── */
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-full { border-radius: var(--radius-full); }
+
+.bg-surface { background-color: var(--bg-surface); }
+.bg-elevated { background-color: var(--bg-elevated); }
+.bg-card { background-color: var(--bg-card); }
+
+.border-subtle { border: 1px solid var(--border-subtle); }
+.border-default { border: 1px solid var(--border-default); }
+.border-strong { border: 1px solid var(--border-strong); }
+
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* ─────────────────────────────────────────────────────────────────
+   INTERACTIVE STATES
+   ───────────────────────────────────────────────────────────────── */
+.cursor-pointer { cursor: pointer; }
+.cursor-default { cursor: default; }
+.pointer-events-none { pointer-events: none; }
+
+/* ─────────────────────────────────────────────────────────────────
+   OVERFLOW
+   ───────────────────────────────────────────────────────────────── */
+.overflow-hidden { overflow: hidden; }
+.overflow-auto { overflow: auto; }
+.overflow-x-auto { overflow-x: auto; }
+.overflow-y-auto { overflow-y: auto; }
+
+/* ─────────────────────────────────────────────────────────────────
+   POSITION
+   ───────────────────────────────────────────────────────────────── */
+.relative { position: relative; }
+.absolute { position: absolute; }
+.fixed { position: fixed; }
+.sticky { position: sticky; }
+
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.top-0 { top: 0; }
+.bottom-0 { bottom: 0; }
+.left-0 { left: 0; }
+.right-0 { right: 0; }
+
+.z-10 { z-index: 10; }
+.z-20 { z-index: 20; }
+.z-30 { z-index: 30; }
+.z-40 { z-index: 40; }
+.z-50 { z-index: 50; }
+
+/* ─────────────────────────────────────────────────────────────────
+   DIMENSIONS
+   ───────────────────────────────────────────────────────────────── */
+.w-full { width: 100%; }
+.w-screen { width: 100vw; }
+.h-full { height: 100%; }
+.h-screen { height: 100vh; }
+.min-h-screen { min-height: 100vh; }
+
+/* ─────────────────────────────────────────────────────────────────
+   TOUCH TARGETS (Accessibility)
+   ───────────────────────────────────────────────────────────────── */
+.touch-target {
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+}
+
+.touch-comfort {
+  min-width: var(--touch-comfort);
+  min-height: var(--touch-comfort);
+}
+
+.touch-large {
+  min-width: var(--touch-large);
+  min-height: var(--touch-large);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   RESPONSIVE UTILITIES
+   ───────────────────────────────────────────────────────────────── */
+/* Visibility utilities — solo ocultan; cuando son visibles preservan
+   el display natural del elemento (inline-flex para botones, block
+   para divs, etc.). Esto evita romper layouts de flex/grid. */
+@media (max-width: 767px) {
+  .desktop-only { display: none !important; }
+}
+
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+}
+
+/* Container queries support */
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (min-width: 480px) { .container { max-width: 100%; } }
+@media (min-width: 768px) { .container { max-width: 768px; } }
+@media (min-width: 1024px) { .container { max-width: 1024px; } }
+@media (min-width: 1280px) { .container { max-width: 1280px; } }

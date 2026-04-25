@@ -1,0 +1,175 @@
+/**
+ * core/variables.css — Design Tokens Zafiro POS v3
+ * Mobile-First Responsive System
+ */
+
+:root {
+  /* ─────────────────────────────────────────────────────────────────
+     ZAFIRO BRAND — Inmutable (Identidad de Plataforma)
+     ───────────────────────────────────────────────────────────────── */
+  --zafiro-blue: #1e5fd9;
+  --zafiro-blue-glow: #4a8aff;
+  --zafiro-blue-dark: #0d3a8f;
+  --zafiro-ink: #0a1628;
+  --zafiro-gem: #00d4ff;
+  
+  /* ─────────────────────────────────────────────────────────────────
+     TENANT THEME — Personalizable vía CSS vars o theme.js
+     ───────────────────────────────────────────────────────────────── */
+  --tenant-primary: #e25822;
+  --tenant-primary-light: #ff7a44;
+  --tenant-secondary: #1a1714;
+  --tenant-accent: #22c55e;
+  --tenant-accent-light: #4ade80;
+  
+  /* ─────────────────────────────────────────────────────────────────
+     SEMÁNTICOS — Superficies y Texto (Adaptables por tema)
+     ───────────────────────────────────────────────────────────────── */
+  /* Dark Theme (Default) */
+  --bg-body: #0a0a0a;
+  --bg-surface: #141414;
+  --bg-elevated: #1e1e1e;
+  --bg-card: #1a1a1a;
+  --bg-hover: #252525;
+  --bg-active: #2a2a2a;
+  
+  --text-primary: #fafafa;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #737373;
+  --text-disabled: #525252;
+  --text-inverse: #0a0a0a;
+  
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.1);
+  --border-strong: rgba(255,255,255,0.15);
+  
+  /* ─────────────────────────────────────────────────────────────────
+     ESTADOS — Feedback Visual
+     ───────────────────────────────────────────────────────────────── */
+  --success: #22c55e;
+  --success-bg: rgba(34,197,94,0.15);
+  --warning: #f59e0b;
+  --warning-bg: rgba(245,158,11,0.15);
+  --error: #ef4444;
+  --error-bg: rgba(239,68,68,0.15);
+  --info: var(--zafiro-blue);
+  --info-bg: rgba(30,95,217,0.15);
+  
+  /* ─────────────────────────────────────────────────────────────────
+     TIPOGRAFÍA — Mobile-First Scale
+     ───────────────────────────────────────────────────────────────── */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  
+  /* Mobile-first type scale */
+  --text-xs: clamp(0.625rem, 2vw, 0.75rem);    /* 10-12px */
+  --text-sm: clamp(0.75rem, 2.5vw, 0.875rem); /* 12-14px */
+  --text-base: clamp(0.875rem, 3vw, 1rem);     /* 14-16px */
+  --text-lg: clamp(1rem, 3.5vw, 1.125rem);   /* 16-18px */
+  --text-xl: clamp(1.125rem, 4vw, 1.25rem);   /* 18-20px */
+  --text-2xl: clamp(1.25rem, 5vw, 1.5rem);    /* 20-24px */
+  --text-3xl: clamp(1.5rem, 6vw, 2rem);       /* 24-32px */
+  
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  
+  /* ─────────────────────────────────────────────────────────────────
+     ESPACIADO — Mobile-First Scale (4px base)
+     ───────────────────────────────────────────────────────────────── */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;  /* 40px */
+  --space-12: 3rem;     /* 48px */
+  
+  /* Responsive spacing */
+  --gap-xs: clamp(0.25rem, 1vw, 0.5rem);
+  --gap-sm: clamp(0.5rem, 2vw, 0.75rem);
+  --gap-md: clamp(0.75rem, 2.5vw, 1rem);
+  --gap-lg: clamp(1rem, 3vw, 1.5rem);
+  --gap-xl: clamp(1.5rem, 4vw, 2rem);
+  
+  /* ─────────────────────────────────────────────────────────────────
+     RADIUS — Bordes Redondeados
+     ───────────────────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* ─────────────────────────────────────────────────────────────────
+     SOMBRAS — Elevación Z
+     ───────────────────────────────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px var(--zafiro-blue-glow);
+  --shadow-primary: 0 4px 14px rgba(226,88,34,0.4);
+  
+  /* ─────────────────────────────────────────────────────────────────
+     TRANSICIONES — Animaciones
+     ───────────────────────────────────────────────────────────────── */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 350ms ease;
+  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  
+  /* ─────────────────────────────────────────────────────────────────
+     LAYOUT — Breakpoints CSS (Reference)
+     ───────────────────────────────────────────────────────────────── */
+  --bp-xs: 320px;   /* Small phones */
+  --bp-sm: 480px;   /* Large phones */
+  --bp-md: 768px;   /* Tablets portrait */
+  --bp-lg: 1024px;  /* Tablets landscape / small laptops */
+  --bp-xl: 1280px;  /* Desktop */
+  --bp-2xl: 1536px; /* Large desktop */
+  
+  /* ─────────────────────────────────────────────────────────────────
+     COMPONENT TOKENS — Touch Targets
+     ───────────────────────────────────────────────────────────────── */
+  --touch-min: 44px;      /* Minimum touch target */
+  --touch-comfort: 48px;  /* Comfortable touch target */
+  --touch-large: 56px;    /* Large touch target (buttons primary) */
+  
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --header-height: 56px;
+  --bottom-nav-height: 64px;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TEMA LIGHT (Override)
+   ───────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --bg-body: #f5f5f5;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f0f0f0;
+  --bg-card: #fafafa;
+  --bg-hover: #e8e8e8;
+  --bg-active: #e0e0e0;
+  
+  --text-primary: #171717;
+  --text-secondary: #525252;
+  --text-tertiary: #737373;
+  --text-disabled: #a3a3a3;
+  --text-inverse: #ffffff;
+  
+  --border-subtle: rgba(0,0,0,0.06);
+  --border-default: rgba(0,0,0,0.1);
+  --border-strong: rgba(0,0,0,0.15);
+  
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+}

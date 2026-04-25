@@ -1,0 +1,16 @@
+/**
+ * themes/dark.css — Tema Oscuro (Default)
+ * Override mínimo ya que las variables en :root son dark por defecto
+ */
+
+/* Los valores por defecto en variables.css ya son dark.
+   Este archivo existe para futuros overrides específicos del tema oscuro.
+   Por ahora, el tema oscuro es el default y no necesita overrides. */
+
+/* Asegurar que el body tenga el tema dark por defecto */
+body {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+}
+
+/* data-theme="dark" usa las variables por defecto de :root */
