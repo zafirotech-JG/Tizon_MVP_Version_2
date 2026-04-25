@@ -984,6 +984,7 @@ select.input {
   grid-template-columns: repeat(2, 1fr);
 }
 .payment-method {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1009,8 +1010,161 @@ select.input {
 .payment-method.active {
   border-color: var(--tenant-primary);
   background: var(--info-bg);
+  box-shadow: 0 0 0 1px var(--tenant-primary) inset;
 }
 .payment-method.active i { color: var(--tenant-primary); }
+
+/* Hotkey badge en esquina del payment-method (solo desktop) */
+.payment-hotkey {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 10px;
+  font-weight: var(--font-semibold);
+  color: var(--text-tertiary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 1px 5px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.payment-method.active .payment-hotkey {
+  color: var(--tenant-primary);
+  border-color: var(--tenant-primary);
+  background: var(--bg-elevated);
+}
+@media (max-width: 600px) {
+  .payment-hotkey { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CASH BLOCK (Recibido + cambio + chips)
+   ═══════════════════════════════════════════════════════════════ */
+.checkout-cash-block {
+  margin-top: 18px;
+  padding: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+.checkout-cash-block[hidden] { display: none; }
+.checkout-cash-block .form-label { margin-top: 0; }
+
+.cash-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.cash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  white-space: nowrap;
+}
+.cash-chip:hover {
+  border-color: var(--tenant-primary);
+  background: var(--bg-hover);
+}
+.cash-chip:active { transform: scale(0.97); }
+.cash-chip-exact {
+  border-color: color-mix(in srgb, var(--success) 50%, transparent);
+  color: var(--success);
+}
+.cash-chip-exact:hover {
+  background: color-mix(in srgb, var(--success) 10%, transparent);
+  border-color: var(--success);
+}
+.cash-chip-exact i { font-size: 0.95rem; }
+
+.cash-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: end;
+}
+.cash-field { display: flex; flex-direction: column; gap: 6px; }
+.cash-field .form-label { margin-bottom: 0; }
+
+.cash-input {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: -0.01em;
+}
+
+.cash-change {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  min-height: 56px;
+  transition: all var(--transition-fast);
+}
+.cash-change-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-tertiary);
+  font-weight: var(--font-medium);
+}
+.cash-change-value {
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  margin-top: 2px;
+}
+.cash-change.positive {
+  border-color: color-mix(in srgb, var(--success) 50%, transparent);
+  background: color-mix(in srgb, var(--success) 8%, var(--bg-card));
+}
+.cash-change.positive .cash-change-value { color: var(--success); }
+.cash-change.exact {
+  border-color: var(--border-default);
+  background: var(--bg-surface);
+}
+.cash-change.exact .cash-change-value { color: var(--text-secondary); }
+.cash-change.insufficient {
+  border-color: color-mix(in srgb, var(--warning) 60%, transparent);
+  background: color-mix(in srgb, var(--warning) 10%, var(--bg-card));
+}
+.cash-change.insufficient .cash-change-value {
+  color: var(--warning);
+  font-size: var(--text-base);
+}
+
+@media (max-width: 480px) {
+  .cash-row { grid-template-columns: 1fr; }
+  .cash-change { align-items: flex-start; }
+}
+
+.checkout-domicilio-label { margin-top: 16px; }
+.form-label-hint {
+  font-weight: var(--font-regular);
+  color: var(--text-tertiary);
+  font-size: var(--text-xs);
+}
 
 .checkout-summary {
   margin-top: 20px;
@@ -1027,6 +1181,7 @@ select.input {
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
 }
+.summary-row[hidden] { display: none; }
 .summary-row.total {
   font-size: var(--text-lg);
   font-weight: var(--font-bold);

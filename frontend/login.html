@@ -30,27 +30,18 @@
       overflow: hidden;
     }
     
-    .auth-page::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      right: -20%;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(30, 95, 217, 0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    
+    /* Halos decorativos simétricos en esquinas opuestas */
+    .auth-page::before,
     .auth-page::after {
       content: '';
       position: absolute;
-      bottom: -30%;
-      left: -10%;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(226, 88, 34, 0.1) 0%, transparent 70%);
+      width: 520px;
+      height: 520px;
+      background: radial-gradient(circle, rgba(30, 95, 217, 0.13) 0%, transparent 70%);
       pointer-events: none;
     }
+    .auth-page::before { top: -30%; right: -15%; }
+    .auth-page::after  { bottom: -30%; left: -15%; }
     
     .auth-container {
       position: relative;
@@ -359,15 +350,10 @@
       <div class="auth-logo">
         <img src="/assets/zafiro-logo.svg" alt="Zafiro POS">
         <h1>Bienvenido de vuelta</h1>
-        <p>Inicia sesión en tu cuenta</p>
+        <p>Inicia sesión para acceder a tu negocio</p>
       </div>
       
       <div class="auth-card">
-        <div class="auth-header">
-          <h2>Iniciar Sesión</h2>
-          <p>Accede con tu email y contraseña</p>
-        </div>
-        
         <form class="auth-form" id="login-form">
           <div class="form-group">
             <label class="form-label" for="email">Correo electrónico</label>

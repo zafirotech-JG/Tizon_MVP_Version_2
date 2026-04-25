@@ -105,7 +105,15 @@ export function modal({ title = '', body = '', actions = [], closable = true, on
         const action = actions[idx];
         if (action.onClick) {
           const result = await action.onClick(dialog);
-          if (result !== false) close(action.value ?? idx);
+          // false → no cerrar (validación falló o se quedó cargando)
+          if (result === false) return;
+          // true / undefined → cerrar con action.value (compat con onClick que retorna true)
+          // cualquier otro valor → cerrar resolviendo con ese valor (caso prompt())
+          if (result === true || result === undefined) {
+            close(action.value ?? idx);
+          } else {
+            close(result);
+          }
         } else {
           close(action.value ?? idx);
         }
@@ -136,7 +144,7 @@ export function confirm(message, { title = 'Confirmar', okLabel = 'Aceptar', can
 }
 
 /**
- * Prompt de texto simple
+ * Prompt de texto simple. Resuelve con la cadena ingresada (trimmed) o `null` si cancela.
  */
 export function prompt(message, { title = '', defaultValue = '', placeholder = '', okLabel = 'Aceptar' } = {}) {
   const inputId = `prompt-input-${Date.now()}`;
@@ -157,6 +165,24 @@ export function prompt(message, { title = '', defaultValue = '', placeholder = '
         onClick: (dialog) => dialog.querySelector(`#${inputId}`).value.trim() || false,
       },
     ],
+    onMount: (dialog) => {
+      const input = dialog.querySelector(`#${inputId}`);
+      const okBtn = dialog.querySelector('[data-action="1"]');
+      if (input) {
+        // Foco + selección para sobrescribir el defaultValue rápidamente
+        requestAnimationFrame(() => {
+          input.focus();
+          input.select();
+        });
+        // Enter confirma
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            okBtn?.click();
+          }
+        });
+      }
+    },
   });
 }
 

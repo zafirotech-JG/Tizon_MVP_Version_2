@@ -286,45 +286,47 @@ function pulseCartButton() {
 // ─────────────────────────────────────────────────────────────────
 // CHECKOUT
 // ─────────────────────────────────────────────────────────────────
+const PAYMENT_METHODS = [
+  { id: 'Efectivo',  icon: 'ph-money',                  label: 'Efectivo',  hotkey: '1' },
+  { id: 'Tarjeta',   icon: 'ph-credit-card',            label: 'Tarjeta',   hotkey: '2' },
+  { id: 'Nequi',     icon: 'ph-qr-code',                label: 'Nequi',     hotkey: '3' },
+  { id: 'Daviplata', icon: 'ph-device-mobile-speaker',  label: 'Daviplata', hotkey: '4' },
+];
+
+/**
+ * Calcula chips de billetes sugeridos según el total a cobrar.
+ * Devuelve "Exacto" + redondeos hacia arriba al siguiente billete común (COP).
+ */
+function suggestedCashAmounts(total) {
+  if (total <= 0) return [];
+  const out = [{ label: 'Exacto', value: total, exact: true }];
+  const ladder = [10000, 20000, 50000, 100000, 200000];
+  const seen = new Set([total]);
+  for (const d of ladder) {
+    const r = Math.ceil((total + 1) / d) * d;
+    if (r > total && !seen.has(r)) {
+      out.push({ label: formatCurrency(r), value: r });
+      seen.add(r);
+    }
+    if (out.length >= 5) break;
+  }
+  return out;
+}
+
 async function openCheckoutModal() {
   if (state.cart.length === 0) return;
-  const totalValor = state.cart.reduce((s, i) => s + (i.precio * i.cantidad), 0);
+  const subtotal = state.cart.reduce((s, i) => s + (i.precio * i.cantidad), 0);
 
-  const result = await modal({
-    title: `Cobrar ${formatCurrency(totalValor)}`,
-    body: `
-      <div class="checkout-form">
-        <label class="form-label">Método de pago</label>
-        <div class="payment-methods payment-methods-2x2">
-          <button type="button" class="payment-method active" data-method="Efectivo">
-            <i class="ph ph-money"></i><span>Efectivo</span>
-          </button>
-          <button type="button" class="payment-method" data-method="Tarjeta">
-            <i class="ph ph-credit-card"></i><span>Tarjeta</span>
-          </button>
-          <button type="button" class="payment-method" data-method="Nequi">
-            <i class="ph ph-device-mobile"></i><span>Nequi</span>
-          </button>
-          <button type="button" class="payment-method" data-method="Daviplata">
-            <i class="ph ph-device-mobile"></i><span>Daviplata</span>
-          </button>
-        </div>
+  // Estado interno del modal (mutado por listeners de onMount)
+  const ck = {
+    metodo: 'Efectivo',
+    domicilio: 0,
+    recibido: subtotal,
+  };
 
-        <label class="form-label" style="margin-top: 16px;">Domicilio (opcional)</label>
-        <input type="number" id="checkout-domicilio" class="input input-lg" value="0" min="0" step="1000">
-
-        <div class="checkout-summary">
-          <div class="summary-row">
-            <span>Subtotal</span>
-            <span>${formatCurrency(totalValor)}</span>
-          </div>
-          <div class="summary-row total">
-            <span>Total</span>
-            <span id="checkout-total">${formatCurrency(totalValor)}</span>
-          </div>
-        </div>
-      </div>
-    `,
+  await modal({
+    title: 'Cobrar venta',
+    body: renderCheckoutBody(subtotal, ck),
     actions: [
       { label: 'Cancelar', variant: 'ghost', value: null },
       {
@@ -332,13 +334,17 @@ async function openCheckoutModal() {
         variant: 'primary',
         icon: 'ph-check',
         onClick: async (dialog) => {
-          const metodoBtn = dialog.querySelector('.payment-method.active');
-          const metodo = metodoBtn?.dataset.method || 'Efectivo';
-          const domicilio = Number(dialog.querySelector('#checkout-domicilio').value) || 0;
+          const total = subtotal + ck.domicilio;
+          if (ck.metodo === 'Efectivo' && ck.recibido < total) {
+            toast(`Faltan ${formatCurrency(total - ck.recibido)} para completar el pago`, 'warning');
+            dialog.querySelector('#ck-recibido')?.focus();
+            return false;
+          }
           const btn = dialog.querySelector('[data-action="1"]');
           setLoading(btn, true, 'Procesando...');
           try {
-            await submitOrden(metodo, domicilio);
+            const change = ck.metodo === 'Efectivo' ? Math.max(0, ck.recibido - total) : 0;
+            await submitOrden(ck.metodo, ck.domicilio, change);
             return true;
           } catch (err) {
             setLoading(btn, false);
@@ -348,32 +354,191 @@ async function openCheckoutModal() {
         },
       },
     ],
+    onMount: (dialog) => wireCheckoutModal(dialog, subtotal, ck),
   });
-
-  // Wire payment method selection (se aplica al abrir modal)
-  setTimeout(() => {
-    document.querySelectorAll('.payment-method').forEach((b) => {
-      b.addEventListener('click', () => {
-        document.querySelectorAll('.payment-method').forEach((x) => x.classList.remove('active'));
-        b.classList.add('active');
-        // Recalcular total con domicilio
-        const dom = Number(document.querySelector('#checkout-domicilio')?.value) || 0;
-        const totalEl = document.getElementById('checkout-total');
-        if (totalEl) totalEl.textContent = formatCurrency(totalValor + dom);
-      });
-    });
-    const domInput = document.querySelector('#checkout-domicilio');
-    if (domInput) {
-      domInput.addEventListener('input', () => {
-        const dom = Number(domInput.value) || 0;
-        const totalEl = document.getElementById('checkout-total');
-        if (totalEl) totalEl.textContent = formatCurrency(totalValor + dom);
-      });
-    }
-  }, 50);
 }
 
-async function submitOrden(metodo_pago, domicilio) {
+function renderCheckoutBody(subtotal, ck) {
+  return `
+    <div class="checkout-form">
+      <label class="form-label">Método de pago</label>
+      <div class="payment-methods payment-methods-2x2">
+        ${PAYMENT_METHODS.map((m) => `
+          <button type="button" class="payment-method ${ck.metodo === m.id ? 'active' : ''}" data-method="${m.id}" title="${m.label} (${m.hotkey})">
+            <span class="payment-hotkey">${m.hotkey}</span>
+            <i class="ph ${m.icon}"></i>
+            <span>${m.label}</span>
+          </button>
+        `).join('')}
+      </div>
+
+      <div class="checkout-cash-block" id="ck-cash-block">
+        <label class="form-label">Pago rápido</label>
+        <div class="cash-chips" id="ck-chips"></div>
+        <div class="cash-row">
+          <div class="cash-field">
+            <label class="form-label" for="ck-recibido">Recibido</label>
+            <input type="number" id="ck-recibido" class="input input-lg cash-input"
+                   inputmode="numeric" min="0" step="1000" value="${subtotal}">
+          </div>
+          <div class="cash-change" id="ck-change">
+            <span class="cash-change-label">Cambio</span>
+            <span class="cash-change-value" id="ck-change-value">${formatCurrency(0)}</span>
+          </div>
+        </div>
+      </div>
+
+      <label class="form-label checkout-domicilio-label">
+        Domicilio <span class="form-label-hint">(opcional)</span>
+      </label>
+      <input type="number" id="ck-domicilio" class="input input-lg"
+             inputmode="numeric" min="0" step="500" value="0" placeholder="0">
+
+      <div class="checkout-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span id="ck-subtotal">${formatCurrency(subtotal)}</span>
+        </div>
+        <div class="summary-row" id="ck-domicilio-row" hidden>
+          <span>Domicilio</span>
+          <span id="ck-domicilio-amount">${formatCurrency(0)}</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total</span>
+          <span id="ck-total">${formatCurrency(subtotal)}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function wireCheckoutModal(dialog, subtotal, ck) {
+  const $ = (sel) => dialog.querySelector(sel);
+  const recibidoInput = $('#ck-recibido');
+  const domicilioInput = $('#ck-domicilio');
+  const cashBlock = $('#ck-cash-block');
+  const chipsEl = $('#ck-chips');
+  const totalEl = $('#ck-total');
+  const subtotalEl = $('#ck-subtotal');
+  const domRow = $('#ck-domicilio-row');
+  const domAmount = $('#ck-domicilio-amount');
+  const changeValue = $('#ck-change-value');
+  const changeBlock = $('#ck-change');
+  const confirmBtn = dialog.querySelector('[data-action="1"]');
+
+  function getTotal() { return subtotal + ck.domicilio; }
+
+  function renderChips() {
+    const total = getTotal();
+    const chips = suggestedCashAmounts(total);
+    chipsEl.innerHTML = chips.map((c) => `
+      <button type="button" class="cash-chip ${c.exact ? 'cash-chip-exact' : ''}" data-value="${c.value}">
+        ${c.exact ? '<i class="ph ph-check-circle"></i> ' : ''}${c.label}
+      </button>
+    `).join('');
+    chipsEl.querySelectorAll('.cash-chip').forEach((b) => {
+      b.addEventListener('click', () => {
+        const v = Number(b.dataset.value) || 0;
+        ck.recibido = v;
+        recibidoInput.value = v;
+        updateChange();
+        recibidoInput.focus();
+        recibidoInput.select();
+      });
+    });
+  }
+
+  function updateChange() {
+    const total = getTotal();
+    const change = ck.recibido - total;
+    changeValue.textContent = formatCurrency(Math.max(0, change));
+    const insufficient = ck.metodo === 'Efectivo' && ck.recibido < total;
+    changeBlock.classList.toggle('insufficient', insufficient);
+    changeBlock.classList.toggle('exact', !insufficient && change === 0);
+    changeBlock.classList.toggle('positive', change > 0);
+    if (insufficient) {
+      changeValue.textContent = `Faltan ${formatCurrency(total - ck.recibido)}`;
+    }
+    if (confirmBtn) confirmBtn.disabled = insufficient;
+  }
+
+  function updateTotals() {
+    const total = getTotal();
+    subtotalEl.textContent = formatCurrency(subtotal);
+    totalEl.textContent = formatCurrency(total);
+    if (ck.domicilio > 0) {
+      domRow.hidden = false;
+      domAmount.textContent = formatCurrency(ck.domicilio);
+    } else {
+      domRow.hidden = true;
+    }
+    renderChips();
+    updateChange();
+  }
+
+  function applyMethod(metodo) {
+    ck.metodo = metodo;
+    dialog.querySelectorAll('.payment-method').forEach((b) => {
+      b.classList.toggle('active', b.dataset.method === metodo);
+    });
+    const isCash = metodo === 'Efectivo';
+    cashBlock.hidden = !isCash;
+    if (isCash) {
+      // Auto-focus para que el cajero teclee el monto recibido
+      requestAnimationFrame(() => {
+        recibidoInput.focus();
+        recibidoInput.select();
+      });
+    }
+    updateChange();
+  }
+
+  // Selección de método (click + hotkey numérico)
+  dialog.querySelectorAll('.payment-method').forEach((b) => {
+    b.addEventListener('click', () => applyMethod(b.dataset.method));
+  });
+
+  // Recibido
+  recibidoInput.addEventListener('input', () => {
+    ck.recibido = Number(recibidoInput.value) || 0;
+    updateChange();
+  });
+
+  // Domicilio → recalcula total + chips + cambio
+  domicilioInput.addEventListener('input', () => {
+    ck.domicilio = Math.max(0, Number(domicilioInput.value) || 0);
+    // Si el recibido era exactamente igual al subtotal previo, mantenerlo en "exacto"
+    if (Math.abs(ck.recibido - (subtotal + (ck.domicilio - (Number(domicilioInput.dataset.prev) || 0)))) < 1) {
+      ck.recibido = getTotal();
+      recibidoInput.value = ck.recibido;
+    }
+    domicilioInput.dataset.prev = ck.domicilio;
+    updateTotals();
+  });
+
+  // Atajos de teclado dentro del modal
+  dialog.addEventListener('keydown', (e) => {
+    // 1-4: seleccionar método de pago (cuando NO se está escribiendo en input numérico)
+    const target = e.target;
+    const isInput = target?.tagName === 'INPUT';
+    if (!isInput && /^[1-4]$/.test(e.key)) {
+      const m = PAYMENT_METHODS[Number(e.key) - 1];
+      if (m) { e.preventDefault(); applyMethod(m.id); }
+      return;
+    }
+    // Enter: confirmar (si no está deshabilitado)
+    if (e.key === 'Enter' && !confirmBtn?.disabled) {
+      e.preventDefault();
+      confirmBtn?.click();
+    }
+  });
+
+  // Estado inicial
+  applyMethod(ck.metodo);
+  updateTotals();
+}
+
+async function submitOrden(metodo_pago, domicilio, change = 0) {
   const orden = {
     sucursal_id: state.sucursalId,
     metodo_pago,
@@ -387,7 +552,12 @@ async function submitOrden(metodo_pago, domicilio) {
   };
 
   const result = await ZafiroAPI.ordenes.crear(orden);
-  toast(`Orden #${result.id?.slice(0, 8) || 'OK'} registrada`, 'success');
+  const ref = result.id?.slice(0, 8) || 'OK';
+  if (change > 0) {
+    toast(`Orden #${ref} · Devolver ${formatCurrency(change)} de cambio`, 'success', 5000);
+  } else {
+    toast(`Orden #${ref} registrada`, 'success');
+  }
   clearCart();
 
   // Marca el paso 'primera venta' del onboarding (idempotente)
