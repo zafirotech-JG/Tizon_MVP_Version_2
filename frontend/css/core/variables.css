@@ -1,0 +1,219 @@
+/**
+ * core/variables.css — Design Tokens Zafiro POS v3
+ * Mobile-First Responsive System — Paleta Fría (Stripe/Vercel style)
+ *
+ * Sistema de color:
+ *  - Base: neutros azul-grises profundos (cool grays con tinte blue)
+ *  - Brand: azul Zafiro (#3b82f6 variants)
+ *  - Semánticos: success / warning / danger
+ *  - Tenant: CSS vars sobrescribibles por branding dinámico
+ */
+
+:root {
+  /* ═══════════════════════════════════════════════════════════════
+     ZAFIRO BRAND — Identidad de Plataforma
+     ═══════════════════════════════════════════════════════════════ */
+  --zafiro-blue:       #3b82f6;  /* blue-500 — primary action */
+  --zafiro-blue-hover: #2563eb;  /* blue-600 — hover/active */
+  --zafiro-blue-soft:  #60a5fa;  /* blue-400 — glow/highlight */
+  --zafiro-blue-deep:  #1d4ed8;  /* blue-700 — pressed */
+  --zafiro-ink:        #0a1628;
+  --zafiro-gem:        #22d3ee;  /* cyan-400 — accent secundario */
+
+  /* ─── Aliases legacy (compat con CSS antiguo) ─── */
+  --zafiro-blue-glow:    var(--zafiro-blue-soft);
+  --brand-glow:          var(--zafiro-blue-soft);
+  --bg-surface-elevated: var(--bg-elevated);
+  --font-family:         var(--font-sans);
+  --success-light:       var(--success-bg);
+  --tenant-primary-light: var(--tenant-primary-soft);
+
+  /* ═══════════════════════════════════════════════════════════════
+     TENANT THEME — Personalizable vía branding API
+     ═══════════════════════════════════════════════════════════════
+     Estos tokens se SOBRESCRIBEN desde JS cuando un tenant
+     customiza su branding. Los defaults son la identidad Zafiro. */
+  --tenant-primary:        var(--zafiro-blue);
+  --tenant-primary-hover:  var(--zafiro-blue-hover);
+  --tenant-primary-soft:   var(--zafiro-blue-soft);
+  --tenant-secondary:      #0a0b0d;
+  --tenant-accent:         #22c55e;
+  --tenant-accent-soft:    #4ade80;
+
+  /* ═══════════════════════════════════════════════════════════════
+     SUPERFICIES (DARK THEME — default)
+     Paleta cool-neutral con tinte azul sutil:
+     - Body más oscuro que las tarjetas (pushed back)
+     - Elevated gradualmente más claro (z-index visual)
+     ═══════════════════════════════════════════════════════════════ */
+  --bg-body:      #09090b;   /* zinc-950 con blue tinge */
+  --bg-surface:   #0f0f12;   /* entre cards */
+  --bg-card:      #141418;   /* tarjetas base */
+  --bg-elevated:  #1a1a20;   /* modales, popovers */
+  --bg-hover:     #1e1e24;   /* hover states */
+  --bg-active:    #26262d;   /* active/selected */
+
+  --text-primary:    #fafafa;
+  --text-secondary:  #a1a1aa;   /* zinc-400 */
+  --text-tertiary:   #71717a;   /* zinc-500 */
+  --text-disabled:   #52525b;   /* zinc-600 */
+  --text-inverse:    #09090b;
+
+  /* Borders sutiles con tinte frío */
+  --border-subtle:   rgba(255, 255, 255, 0.04);
+  --border-default:  rgba(255, 255, 255, 0.08);
+  --border-strong:   rgba(255, 255, 255, 0.14);
+  --border-focus:    var(--zafiro-blue);
+
+  /* ═══════════════════════════════════════════════════════════════
+     ESTADOS SEMÁNTICOS
+     ═══════════════════════════════════════════════════════════════ */
+  --success:     #22c55e;
+  --success-bg:  rgba(34, 197, 94, 0.12);
+  --warning:     #f59e0b;
+  --warning-bg:  rgba(245, 158, 11, 0.12);
+  --danger:      #ef4444;
+  --danger-bg:   rgba(239, 68, 68, 0.12);
+  --info:        var(--zafiro-blue);
+  --info-bg:     rgba(59, 130, 246, 0.12);
+
+  /* Compatibilidad con nombres antiguos */
+  --error:       var(--danger);
+  --error-bg:    var(--danger-bg);
+
+  /* ═══════════════════════════════════════════════════════════════
+     TIPOGRAFÍA
+     ═══════════════════════════════════════════════════════════════ */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  --text-xs:   clamp(0.625rem, 2vw, 0.75rem);
+  --text-sm:   clamp(0.75rem, 2.5vw, 0.875rem);
+  --text-base: clamp(0.875rem, 3vw, 1rem);
+  --text-lg:   clamp(1rem, 3.5vw, 1.125rem);
+  --text-xl:   clamp(1.125rem, 4vw, 1.25rem);
+  --text-2xl:  clamp(1.25rem, 5vw, 1.5rem);
+  --text-3xl:  clamp(1.5rem, 6vw, 2rem);
+
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  --leading-tight:   1.25;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+
+  /* ═══════════════════════════════════════════════════════════════
+     ESPACIADO (4px base)
+     ═══════════════════════════════════════════════════════════════ */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  --gap-xs: clamp(0.25rem, 1vw, 0.5rem);
+  --gap-sm: clamp(0.5rem, 2vw, 0.75rem);
+  --gap-md: clamp(0.75rem, 2.5vw, 1rem);
+  --gap-lg: clamp(1rem, 3vw, 1.5rem);
+  --gap-xl: clamp(1.5rem, 4vw, 2rem);
+
+  /* ═══════════════════════════════════════════════════════════════
+     RADIUS — más sutil (minimalista)
+     ═══════════════════════════════════════════════════════════════ */
+  --radius-sm:   6px;
+  --radius-md:   8px;    /* antes 10 — más afilado */
+  --radius-lg:   12px;   /* antes 14 */
+  --radius-xl:   16px;   /* antes 20 */
+  --radius-full: 9999px;
+
+  /* ═══════════════════════════════════════════════════════════════
+     SOMBRAS — más sutiles (vercel style)
+     ═══════════════════════════════════════════════════════════════ */
+  --shadow-xs:    0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-sm:    0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md:    0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg:    0 12px 32px rgba(0, 0, 0, 0.45);
+  --shadow-xl:    0 24px 64px rgba(0, 0, 0, 0.55);
+  --shadow-glow:  0 0 0 3px rgba(59, 130, 246, 0.3);
+  --shadow-ring:  0 0 0 1px var(--border-default);
+
+  /* ═══════════════════════════════════════════════════════════════
+     TRANSICIONES
+     ═══════════════════════════════════════════════════════════════ */
+  --transition-fast:   120ms ease;
+  --transition-base:   200ms ease;
+  --transition-slow:   320ms ease;
+  --transition-spring: 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ═══════════════════════════════════════════════════════════════
+     BREAKPOINTS (referencia CSS)
+     ═══════════════════════════════════════════════════════════════ */
+  --bp-xs:  320px;
+  --bp-sm:  480px;
+  --bp-md:  768px;
+  --bp-lg:  1024px;
+  --bp-xl:  1280px;
+  --bp-2xl: 1536px;
+
+  /* ═══════════════════════════════════════════════════════════════
+     COMPONENT TOKENS
+     ═══════════════════════════════════════════════════════════════ */
+  --touch-min:         44px;
+  --touch-comfort:     48px;
+  --touch-large:       56px;
+
+  --sidebar-width:     260px;
+  --sidebar-collapsed: 72px;
+  --header-height:     56px;
+  --bottom-nav-height: 64px;
+
+  /* z-index scale */
+  --z-dropdown:  100;
+  --z-sticky:    200;
+  --z-overlay:   9500;
+  --z-modal:     9600;
+  --z-popover:   9700;
+  --z-toast:     10000;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TEMA LIGHT (Override)
+   ═══════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg-body:     #fafafa;
+  --bg-surface:  #ffffff;
+  --bg-card:     #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-hover:    #f4f4f5;
+  --bg-active:   #e4e4e7;
+
+  --text-primary:   #09090b;
+  --text-secondary: #52525b;
+  --text-tertiary:  #71717a;
+  --text-disabled:  #a1a1aa;
+  --text-inverse:   #ffffff;
+
+  --border-subtle:  rgba(0, 0, 0, 0.04);
+  --border-default: rgba(0, 0, 0, 0.1);
+  --border-strong:  rgba(0, 0, 0, 0.16);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 24px 64px rgba(0, 0, 0, 0.14);
+}
+
+/* Tema "warm" (opcional legacy) — mantiene compatibilidad */
+[data-theme="warm"] {
+  --bg-body:    #1a1410;
+  --bg-surface: #221c17;
+  --bg-card:    #2a221c;
+  --bg-hover:   #332922;
+}

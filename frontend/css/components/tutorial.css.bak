@@ -1,0 +1,391 @@
+/**
+ * components/tutorial.css — Estilos para Driver.js y FAQs
+ * Tema Zafiro consistente
+ */
+
+/* ─────────────────────────────────────────────────────────────────
+   DRIVER.JS THEME OVERRIDES
+   ───────────────────────────────────────────────────────────────── */
+
+.driver-popover {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg), 0 0 0 1px rgba(30, 95, 217, 0.2) !important;
+  padding: 0 !important;
+  max-width: 380px !important;
+  font-family: var(--font-sans) !important;
+}
+
+.driver-popover-arrow {
+  border-color: var(--border-default) !important;
+}
+
+/* Header */
+.driver-popover-title {
+  font-size: var(--text-lg) !important;
+  font-weight: var(--font-bold) !important;
+  color: var(--text-primary) !important;
+  padding: var(--space-4) var(--space-4) var(--space-2) !important;
+  margin: 0 !important;
+  line-height: var(--leading-tight) !important;
+}
+
+.driver-popover-title[style*="background"] {
+  background: linear-gradient(135deg, var(--zafiro-blue), var(--zafiro-blue-glow)) !important;
+  color: white !important;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0 !important;
+  padding: var(--space-4) !important;
+  margin: 0 !important;
+}
+
+/* Description */
+.driver-popover-description {
+  font-size: var(--text-sm) !important;
+  color: var(--text-secondary) !important;
+  padding: 0 var(--space-4) var(--space-4) !important;
+  margin: 0 !important;
+  line-height: var(--leading-relaxed) !important;
+}
+
+/* Footer / Progress */
+.driver-popover-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: var(--space-3) var(--space-4) var(--space-4) !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--border-subtle) !important;
+}
+
+.driver-popover-progress-text {
+  font-size: var(--text-xs) !important;
+  color: var(--text-tertiary) !important;
+  font-weight: var(--font-medium) !important;
+}
+
+.driver-popover-navigation-btns {
+  display: flex !important;
+  gap: var(--space-2) !important;
+}
+
+/* Buttons */
+.driver-popover-next-btn,
+.driver-popover-prev-btn,
+.driver-popover-close-btn {
+  min-height: var(--touch-comfort) !important;
+  padding: 0 var(--space-4) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: var(--font-semibold) !important;
+  border-radius: var(--radius-md) !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: all var(--transition-fast) !important;
+}
+
+.driver-popover-next-btn {
+  background: linear-gradient(135deg, var(--zafiro-blue), var(--zafiro-blue-glow)) !important;
+  color: white !important;
+  box-shadow: var(--shadow-glow) !important;
+}
+
+.driver-popover-next-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(30, 95, 217, 0.4) !important;
+}
+
+.driver-popover-prev-btn,
+.driver-popover-close-btn {
+  background-color: var(--bg-elevated) !important;
+  color: var(--text-secondary) !important;
+  border: 1px solid var(--border-default) !important;
+}
+
+.driver-popover-prev-btn:hover,
+.driver-popover-close-btn:hover {
+  background-color: var(--bg-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Overlay */
+.driver-overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.driver-active-element {
+  box-shadow: 0 0 0 2px var(--zafiro-blue-glow), 0 0 20px rgba(30, 95, 217, 0.3) !important;
+  border-radius: var(--radius-md) !important;
+}
+
+.driver-highlighted-element {
+  z-index: 100000 !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   FAQ PANEL
+   ───────────────────────────────────────────────────────────────── */
+
+.faq-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .faq-panel {
+    align-items: center;
+    padding: var(--space-6);
+  }
+}
+
+.faq-overlay {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.faq-container {
+  position: relative;
+  width: 100%;
+  max-height: 85vh;
+  background-color: var(--bg-card);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform var(--transition-spring);
+}
+
+.faq-container.active {
+  transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+  .faq-container {
+    max-width: 600px;
+    max-height: 80vh;
+    border-radius: var(--radius-xl);
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  
+  .faq-container.active {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* FAQ Header */
+.faq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.faq-header h3 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.faq-header h3 i {
+  color: var(--zafiro-blue);
+}
+
+/* FAQ Content */
+.faq-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-3) var(--space-4);
+  -webkit-overflow-scrolling: touch;
+}
+
+.faq-item {
+  margin-bottom: var(--space-2);
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.faq-question:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-default);
+}
+
+.faq-question i {
+  color: var(--text-tertiary);
+  font-size: var(--text-base);
+  transition: transform var(--transition-fast);
+}
+
+.faq-question[aria-expanded="true"] i {
+  transform: rotate(180deg);
+}
+
+.faq-answer {
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+  animation: slideDown var(--transition-fast);
+}
+
+.faq-answer p {
+  margin: 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* FAQ Footer */
+.faq-footer {
+  display: flex;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.faq-footer .btn {
+  flex: 1;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   TOAST NOTIFICATIONS
+   ───────────────────────────────────────────────────────────────── */
+
+.toast-container {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+@media (max-width: 767px) {
+  .toast-container {
+    top: auto;
+    bottom: calc(var(--bottom-nav-height) + var(--space-4));
+    left: var(--space-4);
+    right: var(--space-4);
+  }
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all var(--transition-spring);
+  pointer-events: auto;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-success {
+  border-color: var(--success);
+  background-color: var(--success-bg);
+}
+
+.toast-success i {
+  color: var(--success);
+}
+
+.toast-error {
+  border-color: var(--error);
+  background-color: var(--error-bg);
+}
+
+.toast-error i {
+  color: var(--error);
+}
+
+.toast-info {
+  border-color: var(--info);
+  background-color: var(--info-bg);
+}
+
+.toast-info i {
+  color: var(--info);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   BADGES
+   ───────────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-primary {
+  background-color: var(--tenant-primary);
+  color: white;
+}
+
+.badge-secondary {
+  background-color: var(--bg-elevated);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+
+.badge-success {
+  background-color: var(--success-bg);
+  color: var(--success);
+}
