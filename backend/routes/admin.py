@@ -33,6 +33,9 @@ def get_admin_user(user: dict = Depends(get_current_user)) -> dict:
 class PatchTenantBody(BaseModel):
     plan_activo:       Optional[bool]     = None
     fecha_vencimiento: Optional[datetime] = None
+    nombre:            Optional[str]      = None
+    email:             Optional[str]      = None
+    plan:              Optional[str]      = None
 
 
 # ── Login exclusivo para admins ───────────────────────────────────────────
@@ -88,6 +91,19 @@ def actualizar_tenant(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant no encontrado")
 
+    # Validar email único si se está actualizando
+    if body.email is not None and body.email != tenant.email:
+        existing = db.query(Tenant).filter(Tenant.email == body.email.strip().lower()).first()
+        if existing:
+            raise HTTPException(status_code=422, detail="Ya existe un tenant con ese correo")
+        tenant.email = body.email.strip().lower()
+
+    if body.nombre is not None:
+        tenant.nombre = body.nombre.strip()
+
+    if body.plan is not None:
+        tenant.plan = body.plan.strip().lower()
+
     if body.plan_activo is not None:
         tenant.plan_activo = body.plan_activo
 
@@ -99,6 +115,38 @@ def actualizar_tenant(
     db.refresh(tenant)
     return {
         "id":                tenant.id,
+        "nombre":            tenant.nombre,
+        "email":             tenant.email,
+        "plan":              tenant.plan,
         "plan_activo":       tenant.plan_activo,
         "fecha_vencimiento": tenant.fecha_vencimiento.isoformat() if tenant.fecha_vencimiento else None,
+    }
+
+
+# ── DELETE /tenants/{id} ──────────────────────────────────────────────────
+@router.delete("/tenants/{tenant_id}")
+def eliminar_tenant(
+    tenant_id: int,
+    db: Session = Depends(get_db),
+    _: dict = Depends(get_admin_user),
+):
+    """
+    Elimina permanentemente un tenant y todos sus datos asociados.
+    Esta acción no se puede deshacer.
+    """
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant no encontrado")
+
+    # Prevenir eliminación del super admin
+    if tenant.es_admin:
+        raise HTTPException(status_code=403, detail="No se puede eliminar la cuenta de super administrador")
+
+    nombre = tenant.nombre
+    db.delete(tenant)
+    db.commit()
+
+    return {
+        "message": f"Tenant '{nombre}' eliminado permanentemente",
+        "id": tenant_id
     }

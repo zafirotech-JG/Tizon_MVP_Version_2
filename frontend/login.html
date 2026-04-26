@@ -56,9 +56,18 @@
     }
     
     .auth-logo img {
-      width: 80px;
+      width: 120px;
       height: auto;
       margin-bottom: var(--space-4);
+      filter: drop-shadow(0 4px 12px rgba(30, 95, 217, 0.3));
+    }
+    
+    .auth-logo .logo-img {
+      width: 140px;
+      max-height: 140px;
+      object-fit: contain;
+      margin: 0 auto var(--space-6);
+      display: block;
     }
     
     .auth-logo h1 {
@@ -348,7 +357,7 @@
   <div class="auth-page">
     <div class="auth-container">
       <div class="auth-logo">
-        <img src="/assets/zafiro-logo.svg" alt="Zafiro POS">
+        <img src="/assets/zafiro-logo-new.png" alt="Zafiro POS" class="logo-img">
         <h1>Bienvenido de vuelta</h1>
         <p>Inicia sesión para acceder a tu negocio</p>
       </div>
