@@ -21,6 +21,64 @@ from backend.routes import (
     sucursales, usuarios, ventas,
 )
 
+FRONTEND_RUNTIME_FILES = (
+    ("index_html", "index.html"),
+    ("admin_html", "admin.html"),
+    ("login_html", "login.html"),
+    ("register_html", "register.html"),
+    ("main_css", "css/main.css"),
+    ("logo_new", "assets/zafiro-logo-new.png"),
+    ("logo_svg", "assets/zafiro-logo.svg"),
+)
+
+
+def _frontend_runtime_status() -> dict:
+    frontend_dir = str(FRONTEND_DIR)
+    files = {}
+    for key, relative_path in FRONTEND_RUNTIME_FILES:
+        path = os.path.join(frontend_dir, *relative_path.split("/"))
+        exists = os.path.exists(path)
+        files[key] = {
+            "relative_path": relative_path,
+            "path": path,
+            "exists": exists,
+            "size": os.path.getsize(path) if exists and os.path.isfile(path) else None,
+        }
+
+    dirs = {}
+    for key, relative_path in (("css", "css"), ("js", "js"), ("assets", "assets")):
+        path = os.path.join(frontend_dir, relative_path)
+        dirs[key] = {
+            "path": path,
+            "exists": os.path.isdir(path),
+        }
+
+    return {
+        "cwd": os.getcwd(),
+        "frontend_dir": frontend_dir,
+        "frontend_dir_exists": os.path.isdir(frontend_dir),
+        "files": files,
+        "dirs": dirs,
+    }
+
+
+def _log_frontend_runtime_status() -> None:
+    status = _frontend_runtime_status()
+    logger.info(
+        "Frontend runtime: cwd=%s frontend_dir=%s exists=%s",
+        status["cwd"],
+        status["frontend_dir"],
+        status["frontend_dir_exists"],
+    )
+    for key, item in status["files"].items():
+        logger.info(
+            "Frontend file %s: exists=%s size=%s path=%s",
+            key,
+            item["exists"],
+            item["size"],
+            item["path"],
+        )
+
 
 def _seed_admin() -> None:
     """Crea el primer usuario admin si no existe ninguno, usando ADMIN_EMAIL y ADMIN_PASSWORD.
@@ -131,6 +189,7 @@ async def lifespan(app: FastAPI):
         logger.info("Tablas de base de datos verificadas/creadas exitosamente")
         _seed_admin()
         _backfill_tenants_v3()
+        _log_frontend_runtime_status()
     except Exception as e:
         logger.error(f"Error al crear tablas: {e}")
         raise
@@ -234,3 +293,8 @@ def serve_manifest():
 def health_check():
     """Health check endpoint para monitoreo y tests."""
     return {"status": "ok", "version": "3.0.0", "service": "zafiro-pos"}
+
+
+@app.get("/api/debug/static", include_in_schema=False)
+def debug_static():
+    return _frontend_runtime_status()
